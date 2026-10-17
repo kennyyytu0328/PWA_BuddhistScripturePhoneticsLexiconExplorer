@@ -1,0 +1,48 @@
+// ============================================================
+// spec-flow 規格單元設定（專案層級，請 commit 進 repo）
+// 沒有這個檔案時，spec-flow 會把整個專案當成單一單元：
+//   產出放 docs/spec/，需求編號為 REQ-001
+// 修改後執行以下指令檢查格式：
+//   node ~/.claude/skills/spec-gate/scripts/trace-check.mjs --describe
+// ============================================================
+{
+  // 設定檔格式版本，目前固定填 1
+  "version": 1,
+
+  // 稽核需要 app 執行中（樣式比對、截圖比對）時，提示使用者怎麼啟動
+  // 選填，省略時 spec-gate 只會說「請先啟動 app」
+  "appStartHint": "請先執行 pnpm build:data && pnpm dev（http://localhost:5173）",
+
+  // 單元清單。key 是單元名稱，執行 /spec-gate <名稱> 時使用
+  // 只能用小寫英數與連字號，例如 order、order-export、shared
+  "units": {
+    // 資料管線：CLAUDE.md §3（資料架構與建置腳本）、§4（內容規範中可由建置驗證的部分）、§8.1（資料驗收）
+    // 閱讀介面（§1、§6、§7）與 PWA 離線（§5）之後另設單元
+    "data": {
+      // 需求編號前綴，2–5 個大寫英文字母，編號會變成 REQ-DAT-001
+      // 一旦有測試引用這個前綴就不要再改，改了所有追溯都會斷掉
+      "idPrefix": "DAT",
+
+      // 原始規格檔（唯讀的 Source of Truth），路徑相對於 repo 根目錄，可用 glob
+      "sources": ["CLAUDE.md"],
+
+      // 原始 HTML mock（唯讀），可用 glob
+      // 沒有 mock 就填 []，會略過 Step 1 的 mock 拆解與樣式比對
+      "mocks": [],
+
+      // spec-flow 的產出目錄：requirements.md、open-questions.md、style-map.json、frozen-tests.json
+      "workDir": "docs/spec/data",
+
+      // 本單元驗收測試所在的目錄（必填）
+      // trace-check 只在這些目錄裡找 REQ-DAT-xxx，凍結測試也只限這些目錄
+      "testDirs": ["tests/acceptance/data"],
+
+      // 執行本單元驗收測試的指令，在 repo 根目錄依序執行
+      // 任何一個指令失敗，或有測試被 skip，都算 FAIL
+      "acceptanceTestCommands": ["pnpm vitest run tests/acceptance/data", "pnpm vitest run --coverage"],
+
+      // 依賴的其他單元名稱；目前沒有共用單元
+      "dependsOn": []
+    }
+  }
+}

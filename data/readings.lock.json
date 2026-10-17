@@ -1,0 +1,447 @@
+{
+  "$schemaVersion": 1,
+  "generator": "pinyin-pro 3.29.5 (toneSandhi: false) + heart-sutra.json py overrides",
+  "reviewedAgainst": "教育部《重編國語辭典修訂本》（萌典 moedict.tw）",
+  "reviewedOn": "2026-10-16",
+  "report": "review/readings-review.md",
+  "segments": {
+    "s1": [
+      {
+        "t": "觀自在",
+        "py": "guān zì zài"
+      },
+      {
+        "t": "菩薩",
+        "py": "pú sà"
+      },
+      {
+        "t": "行深",
+        "py": "xíng shēn",
+        "override": true
+      },
+      {
+        "t": "般若波羅蜜多",
+        "py": "bō rě bō luó mì duō",
+        "override": true
+      },
+      {
+        "t": "時",
+        "py": "shí"
+      },
+      {
+        "t": "照見",
+        "py": "zhào jiàn"
+      },
+      {
+        "t": "五蘊",
+        "py": "wǔ yùn"
+      },
+      {
+        "t": "皆",
+        "py": "jiē"
+      },
+      {
+        "t": "空",
+        "py": "kōng"
+      },
+      {
+        "t": "度",
+        "py": "dù"
+      },
+      {
+        "t": "一切",
+        "py": "yī qiè"
+      },
+      {
+        "t": "苦厄",
+        "py": "kǔ è"
+      }
+    ],
+    "s2": [
+      {
+        "t": "舍利子",
+        "py": "shè lì zǐ",
+        "override": true
+      },
+      {
+        "t": "色不異空",
+        "py": "sè bù yì kōng"
+      },
+      {
+        "t": "空不異色",
+        "py": "kōng bù yì sè"
+      },
+      {
+        "t": "色即是空",
+        "py": "sè jí shì kōng"
+      },
+      {
+        "t": "空即是色",
+        "py": "kōng jí shì sè"
+      },
+      {
+        "t": "受想行識",
+        "py": "shòu xiǎng xíng shì",
+        "override": true
+      },
+      {
+        "t": "亦復如是",
+        "py": "yì fù rú shì"
+      }
+    ],
+    "s3": [
+      {
+        "t": "舍利子",
+        "py": "shè lì zǐ",
+        "override": true
+      },
+      {
+        "t": "是",
+        "py": "shì"
+      },
+      {
+        "t": "諸法",
+        "py": "zhū fǎ"
+      },
+      {
+        "t": "空相",
+        "py": "kōng xiàng",
+        "override": true
+      },
+      {
+        "t": "不生不滅",
+        "py": "bù shēng bù miè"
+      },
+      {
+        "t": "不垢不淨",
+        "py": "bù gòu bù jìng"
+      },
+      {
+        "t": "不增不減",
+        "py": "bù zēng bù jiǎn"
+      }
+    ],
+    "s4": [
+      {
+        "t": "是故",
+        "py": "shì gù"
+      },
+      {
+        "t": "空中",
+        "py": "kōng zhōng"
+      },
+      {
+        "t": "無",
+        "py": "wú"
+      },
+      {
+        "t": "色",
+        "py": "sè"
+      },
+      {
+        "t": "無",
+        "py": "wú"
+      },
+      {
+        "t": "受想行識",
+        "py": "shòu xiǎng xíng shì",
+        "override": true
+      },
+      {
+        "t": "無",
+        "py": "wú"
+      },
+      {
+        "t": "眼耳鼻舌身意",
+        "py": "yǎn ěr bí shé shēn yì"
+      },
+      {
+        "t": "無",
+        "py": "wú"
+      },
+      {
+        "t": "色聲香味觸法",
+        "py": "sè shēng xiāng wèi chù fǎ"
+      },
+      {
+        "t": "無",
+        "py": "wú"
+      },
+      {
+        "t": "眼界",
+        "py": "yǎn jiè"
+      },
+      {
+        "t": "乃至",
+        "py": "nǎi zhì"
+      },
+      {
+        "t": "無",
+        "py": "wú"
+      },
+      {
+        "t": "意識界",
+        "py": "yì shì jiè",
+        "override": true
+      }
+    ],
+    "s5": [
+      {
+        "t": "無",
+        "py": "wú"
+      },
+      {
+        "t": "無明",
+        "py": "wú míng"
+      },
+      {
+        "t": "亦無",
+        "py": "yì wú"
+      },
+      {
+        "t": "無明",
+        "py": "wú míng"
+      },
+      {
+        "t": "盡",
+        "py": "jìn"
+      },
+      {
+        "t": "乃至",
+        "py": "nǎi zhì"
+      },
+      {
+        "t": "無",
+        "py": "wú"
+      },
+      {
+        "t": "老死",
+        "py": "lǎo sǐ"
+      },
+      {
+        "t": "亦無",
+        "py": "yì wú"
+      },
+      {
+        "t": "老死",
+        "py": "lǎo sǐ"
+      },
+      {
+        "t": "盡",
+        "py": "jìn"
+      },
+      {
+        "t": "無",
+        "py": "wú"
+      },
+      {
+        "t": "苦集滅道",
+        "py": "kǔ jí miè dào"
+      },
+      {
+        "t": "無",
+        "py": "wú"
+      },
+      {
+        "t": "智",
+        "py": "zhì"
+      },
+      {
+        "t": "亦無得",
+        "py": "yì wú dé"
+      }
+    ],
+    "s6": [
+      {
+        "t": "以",
+        "py": "yǐ"
+      },
+      {
+        "t": "無所得",
+        "py": "wú suǒ dé"
+      },
+      {
+        "t": "故",
+        "py": "gù"
+      },
+      {
+        "t": "菩提薩埵",
+        "py": "pú tí sà duǒ",
+        "override": true
+      },
+      {
+        "t": "依",
+        "py": "yī"
+      },
+      {
+        "t": "般若波羅蜜多",
+        "py": "bō rě bō luó mì duō",
+        "override": true
+      },
+      {
+        "t": "故",
+        "py": "gù"
+      },
+      {
+        "t": "心無",
+        "py": "xīn wú"
+      },
+      {
+        "t": "罣礙",
+        "py": "guà ài"
+      },
+      {
+        "t": "無",
+        "py": "wú"
+      },
+      {
+        "t": "罣礙",
+        "py": "guà ài"
+      },
+      {
+        "t": "故",
+        "py": "gù"
+      },
+      {
+        "t": "無有恐怖",
+        "py": "wú yǒu kǒng bù"
+      },
+      {
+        "t": "遠離",
+        "py": "yuǎn lí"
+      },
+      {
+        "t": "顛倒夢想",
+        "py": "diān dǎo mèng xiǎng"
+      },
+      {
+        "t": "究竟涅槃",
+        "py": "jiù jìng niè pán",
+        "override": true
+      }
+    ],
+    "s7": [
+      {
+        "t": "三世諸佛",
+        "py": "sān shì zhū fó"
+      },
+      {
+        "t": "依",
+        "py": "yī"
+      },
+      {
+        "t": "般若波羅蜜多",
+        "py": "bō rě bō luó mì duō",
+        "override": true
+      },
+      {
+        "t": "故",
+        "py": "gù"
+      },
+      {
+        "t": "得",
+        "py": "dé"
+      },
+      {
+        "t": "阿耨多羅三藐三菩提",
+        "py": "ā nòu duō luó sān miǎo sān pú tí",
+        "override": true
+      }
+    ],
+    "s8": [
+      {
+        "t": "故知",
+        "py": "gù zhī"
+      },
+      {
+        "t": "般若波羅蜜多",
+        "py": "bō rě bō luó mì duō",
+        "override": true
+      },
+      {
+        "t": "是",
+        "py": "shì"
+      },
+      {
+        "t": "大神咒",
+        "py": "dà shén zhòu"
+      },
+      {
+        "t": "是",
+        "py": "shì"
+      },
+      {
+        "t": "大明咒",
+        "py": "dà míng zhòu"
+      },
+      {
+        "t": "是",
+        "py": "shì"
+      },
+      {
+        "t": "無上咒",
+        "py": "wú shàng zhòu"
+      },
+      {
+        "t": "是",
+        "py": "shì"
+      },
+      {
+        "t": "無等等咒",
+        "py": "wú děng děng zhòu"
+      },
+      {
+        "t": "能除",
+        "py": "néng chú"
+      },
+      {
+        "t": "一切",
+        "py": "yī qiè"
+      },
+      {
+        "t": "苦",
+        "py": "kǔ"
+      },
+      {
+        "t": "真實不虛",
+        "py": "zhēn shí bù xū"
+      }
+    ],
+    "s9": [
+      {
+        "t": "故說",
+        "py": "gù shuō"
+      },
+      {
+        "t": "般若波羅蜜多咒",
+        "py": "bō rě bō luó mì duō zhòu",
+        "override": true
+      },
+      {
+        "t": "即說咒曰",
+        "py": "jí shuō zhòu yuē",
+        "override": true
+      },
+      {
+        "t": "揭諦揭諦",
+        "py": "jiē dì jiē dì",
+        "override": true
+      },
+      {
+        "t": "波羅揭諦",
+        "py": "bō luó jiē dì",
+        "override": true
+      },
+      {
+        "t": "波羅僧揭諦",
+        "py": "bō luó sēng jiē dì",
+        "override": true
+      },
+      {
+        "t": "菩提薩婆訶",
+        "py": "pú tí sà pó hē",
+        "override": true
+      }
+    ]
+  }
+}

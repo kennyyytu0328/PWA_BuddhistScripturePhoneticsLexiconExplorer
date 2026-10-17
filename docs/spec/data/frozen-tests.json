@@ -1,0 +1,15 @@
+{
+  "files": {
+    "tests/acceptance/data/ast.test.ts": "05d85fbc27428106890c78d59ec5b91a5cc732fd76270bf2912809435746dcb7",
+    "tests/acceptance/data/coverage.test.ts": "d183c5bd197b9859fa9996e5e3b684cf6bb4c4efa1b85e450c317e4737e3cd3a",
+    "tests/acceptance/data/helpers.ts": "9d7143c6f399aa5e1ea343921248bc00f718cf41ad9a72839b8ab8833b4edff3",
+    "tests/acceptance/data/lexicon.test.ts": "04b023722b5196db5324ce7fa6748001d23122779ac08b603a3f9332256c93f8",
+    "tests/acceptance/data/review.test.ts": "2ea9e29529e6a80a3af0caa527549d7d9976b27d0f394d05c75d7bb7c6965a4b",
+    "tests/acceptance/data/scaffold.test.ts": "4f1c3fb8ee6f46df70328f6ee1ca3441e084822865a93f4f99c28573447fd9f4",
+    "tests/acceptance/data/shared-build.ts": "c894c928695ca8f9c6982db1fcd360a17eb449ab7e212046b72b46eac191e888",
+    "tests/acceptance/data/validation.test.ts": "a5833e1775cd119ed5428b74de65d58d928a9bc4920e439340625b3454a2a5a8",
+    "tests/acceptance/data/zhuyin.test.ts": "c97c955f43bbe80e4c95ba416adea2be3aa2042e35c9edee9ff74ab78bf523a4",
+    "tests/acceptance/data/gaps.test.ts": "730f14f81fae76dc673e0fa91f8d16f9b31ec5d33fcc39cf1803543e672a6c9a"
+  },
+  "frozenAt": "2026-10-17T02:28:10.202Z"
+}

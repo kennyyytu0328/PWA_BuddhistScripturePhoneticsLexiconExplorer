@@ -1,0 +1,429 @@
+{
+  "$schemaVersion": 1,
+  "sources": {
+    "gretil-vaidya": {
+      "citation": "Prajñāpāramitāhṛdayasūtra, saṃkṣiptamātṛkā. GRETIL TEI edition, based on P. L. Vaidya (ed.), Mahāyāna-sūtra-saṃgrahaḥ, Part 1, Darbhanga: Mithila Institute, 1961 (Buddhist Sanskrit Texts 17), p. 97. Input: Digital Sanskrit Buddhist Canon Project.",
+      "url": "https://gretil.sub.uni-goettingen.de/gretil/corpustei/sa_prajJApAramitAhRdayasUtrasaMkSiptamAtRkA.xml",
+      "license": "CC BY-NC-SA 4.0 (the e-text). Used only to verify the spelling of individual terms; no running text is copied into the app."
+    },
+    "gretil-richards": {
+      "citation": "Prajñāpāramitāhṛdayasūtra, GRETIL TEI edition (legacy file prajnhsu.htm, input by John Richards; print source not stated).",
+      "url": "https://gretil.sub.uni-goettingen.de/gretil/corpustei/sa_prajJApAramitAhRdayasUtra.xml",
+      "license": "CC BY-NC-SA 4.0. Secondary witness only: its provenance is unstated and it contains typos (e.g. 'Āvalokiteśvaro', 'cāryāṃ', 'Tradhva')."
+    },
+    "mn1884": {
+      "citation": "F. Max Müller & Bunyiu Nanjio (eds.), The Ancient Palm-Leaves containing the Pragñâ-pâramitâ-hridaya-sûtra and the Ushnîsha-vigaya-dhâranî, with an appendix by G. Bühler. Anecdota Oxoniensia, Aryan Series, Vol. I, Part III. Oxford: Clarendon Press, 1884. 'Shorter Text restored', pp. 48–50; Ziogon's romanized transliteration, pp. 17–22.",
+      "url": "https://archive.org/details/BuddhistTextsFromJapan",
+      "license": "Public domain (1884). archive.org marks the scan with the Public Domain Mark 1.0; the scan is the 1976 AMS reprint of the 1881–84 edition and includes Part III.",
+      "status": "Optional cross-check (CLAUDE.md §3.5). The edition is located, but individual spellings have not yet been checked against it: the restored text is set in Devanagari, which the OCR cannot read. Not a condition for review.iast."
+    },
+    "dila-shh": {
+      "citation": "W. E. Soothill & L. Hodous, A Dictionary of Chinese Buddhist Terms (1937), DILA TEI P5 digital edition (from Charles Muller's DDB digitization, 2002–03).",
+      "url": "https://glossaries.dila.edu.tw/glossaries/SHH",
+      "license": "license unconfirmed: the glossary page states no license, only the site footer 'DILA 2005/2026'. Cross-check reference only; not cited by any entry."
+    }
+  },
+  "normalization": "Spellings follow GRETIL's IAST normalization. Sandhi is undone and forms are reduced to stems for single terms (e.g. 'nāvidyā' → 'avidyā', 'cakṣurdhātur' → 'cakṣurdhātu'). Compounds are hyphenated at their members for readability. Phrase-level entries keep the attested sandhi. Müller's pre-IAST conventions (â, ri, g for j, etc.) are not used directly.",
+  "review": {
+    "iast": true
+  },
+  "entries": [
+    {
+      "lex": "觀自在",
+      "tokens": [
+        "觀自在"
+      ],
+      "iast": "Avalokiteśvara",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶3 'āryāvalokiteśvarabodhisattvo'"
+    },
+    {
+      "lex": "菩薩",
+      "tokens": [
+        "菩薩"
+      ],
+      "iast": "bodhisattva",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶3"
+    },
+    {
+      "lex": "菩提薩埵",
+      "tokens": [
+        "菩提薩埵"
+      ],
+      "iast": "bodhisattva",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶8 'bodhisattvasya(śca?)'",
+      "note": "Vaidya's text is corrupt here; gretil-richards reads 'bodhisattvo'. Reviewed 2026-10-16: option A adopted (review/iast-review.md)."
+    },
+    {
+      "lex": "般若波羅蜜多",
+      "tokens": [
+        "般若波羅蜜多"
+      ],
+      "iast": "prajñāpāramitā",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶3, ¶8, ¶9"
+    },
+    {
+      "lex": "舍利弗",
+      "tokens": [
+        "舍利子"
+      ],
+      "iast": "Śāriputra",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶4, ¶6 (vocative 'śāriputra')"
+    },
+    {
+      "lex": "五蘊",
+      "tokens": [
+        "五蘊"
+      ],
+      "iast": "pañca skandhāḥ",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶3 'pañca skandhāḥ'"
+    },
+    {
+      "lex": "空",
+      "tokens": [
+        "空"
+      ],
+      "segments": [
+        "s1"
+      ],
+      "iast": "śūnya",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶3 'svabhāvaśūnyān'",
+      "note": "皆空 renders svabhāva-śūnya ('empty of own-nature'); the token covers only śūnya."
+    },
+    {
+      "lex": "受想行識",
+      "tokens": [
+        "受想行識"
+      ],
+      "iast": "vedanā-saṃjñā-saṃskāra-vijñāna",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶5 'vedanāsaṃjñāsaṃskāravijñānāni'"
+    },
+    {
+      "lex": "色",
+      "tokens": [
+        "色"
+      ],
+      "iast": "rūpa",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶6 'na rūpam'"
+    },
+    {
+      "lex": "諸法",
+      "tokens": [
+        "諸法"
+      ],
+      "iast": "sarvadharmāḥ",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶6"
+    },
+    {
+      "lex": "空相",
+      "tokens": [
+        "空相"
+      ],
+      "iast": "śūnyatālakṣaṇa",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶6 'śūnyatālakṣaṇā'"
+    },
+    {
+      "lex": "六根",
+      "tokens": [
+        "眼耳鼻舌身意"
+      ],
+      "iast": "cakṣuḥ-śrotra-ghrāṇa-jihvā-kāya-manāṃsi",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶6"
+    },
+    {
+      "lex": "六境",
+      "tokens": [
+        "色聲香味觸法"
+      ],
+      "iast": "rūpa-śabda-gandha-rasa-spraṣṭavya-dharmāḥ",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶6"
+    },
+    {
+      "lex": "十八界",
+      "tokens": [
+        "眼界"
+      ],
+      "iast": "cakṣurdhātu",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶6 'cakṣurdhātur'"
+    },
+    {
+      "lex": "十八界",
+      "tokens": [
+        "意識界"
+      ],
+      "iast": "manovijñānadhātu",
+      "source": "gretil-richards",
+      "locator": "'na mano-vijñāna-dhātuḥ'",
+      "note": "Vaidya (¶6) reads 'manodhātuḥ' (mind-element), which does not match 意識界. The Richards reading matches the Chinese. Reviewed 2026-10-16: option A adopted (review/iast-review.md)."
+    },
+    {
+      "lex": "無明",
+      "tokens": [
+        "無明"
+      ],
+      "iast": "avidyā",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶7 'nāvidyā', 'nāvidyākṣayo'"
+    },
+    {
+      "lex": "老死支",
+      "tokens": [
+        "老死"
+      ],
+      "iast": "jarāmaraṇa",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶7"
+    },
+    {
+      "lex": "苦集滅道",
+      "tokens": [
+        "苦集滅道"
+      ],
+      "iast": "duḥkha-samudaya-nirodha-mārga",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶7 'duḥkhasamudayanirodhamārgā'"
+    },
+    {
+      "lex": "智",
+      "tokens": [
+        "智"
+      ],
+      "iast": "jñāna",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶7 'na jñānaṃ'"
+    },
+    {
+      "lex": "無所得",
+      "tokens": [
+        "無所得"
+      ],
+      "iast": "aprāptitva",
+      "source": "gretil-richards",
+      "locator": "'aprāptitvād bodhisattvo'",
+      "note": "Vaidya (¶7) has 'na prāptitvam' closing the previous sentence, with no separate 以無所得故 clause. Reviewed 2026-10-16: option A adopted (review/iast-review.md)."
+    },
+    {
+      "lex": "罣礙",
+      "tokens": [
+        "罣礙"
+      ],
+      "iast": "āvaraṇa",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶8 'cittāvaraṇaḥ', 'cittāvaraṇanāstitvād'",
+      "note": "Attested inside citta-āvaraṇa; 心 is a separate token (心無)."
+    },
+    {
+      "lex": "顛倒",
+      "tokens": [
+        "顛倒夢想"
+      ],
+      "iast": "viparyāsa",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶8 'viparyāsātikrānto'",
+      "note": "Sanskrit has viparyāsa only; 夢想 has no separate counterpart."
+    },
+    {
+      "lex": "究竟涅槃",
+      "tokens": [
+        "究竟涅槃"
+      ],
+      "iast": "niṣṭhānirvāṇa",
+      "source": "gretil-richards",
+      "locator": "'niṣṭhā-nirvāṇaḥ'",
+      "note": "Vaidya (¶8) reads 'niṣṭhanirvāṇaḥ' (short a). Reviewed 2026-10-16: option A adopted (review/iast-review.md)."
+    },
+    {
+      "lex": "阿耨多羅三藐三菩提",
+      "tokens": [
+        "阿耨多羅三藐三菩提"
+      ],
+      "iast": "anuttarā samyaksaṃbodhi",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶8 'anuttarāṃ samyaksaṃbodhim'"
+    },
+    {
+      "lex": "大神咒",
+      "tokens": [
+        "大神咒"
+      ],
+      "iast": "mahāmantra",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶9 'mahāmantro'"
+    },
+    {
+      "lex": "大明咒",
+      "tokens": [
+        "大明咒"
+      ],
+      "iast": "mahāvidyāmantra",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶9"
+    },
+    {
+      "lex": "無等等咒",
+      "tokens": [
+        "無等等咒"
+      ],
+      "iast": "asamasamamantra",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶9 \"'samasamamantraḥ\" (avagraha = a-)"
+    },
+    {
+      "lex": "一切",
+      "tokens": [
+        "一切"
+      ],
+      "segments": [
+        "s8"
+      ],
+      "iast": "sarva",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶9 'sarvaduḥkhapraśamanaḥ'",
+      "note": "s8 only; the 一切 in s1 (度一切苦厄) has no Sanskrit counterpart."
+    },
+    {
+      "lex": "苦",
+      "tokens": [
+        "苦"
+      ],
+      "segments": [
+        "s8"
+      ],
+      "iast": "duḥkha",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶9 'sarvaduḥkhapraśamanaḥ'"
+    },
+    {
+      "lex": "心經真言",
+      "tokens": [
+        "揭諦揭諦"
+      ],
+      "iast": "gate gate",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶9"
+    },
+    {
+      "lex": "心經真言",
+      "tokens": [
+        "波羅揭諦"
+      ],
+      "iast": "pāragate",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶9"
+    },
+    {
+      "lex": "心經真言",
+      "tokens": [
+        "波羅僧揭諦"
+      ],
+      "iast": "pārasaṃgate",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶9"
+    },
+    {
+      "lex": "心經真言",
+      "tokens": [
+        "菩提薩婆訶"
+      ],
+      "iast": "bodhi svāhā",
+      "source": "gretil-vaidya",
+      "locator": "Vaidya 97, ¶9"
+    }
+  ],
+  "noIast": [
+    {
+      "lex": "度",
+      "tokens": [
+        "度"
+      ],
+      "reason": "度一切苦厄 is absent from the Sanskrit short text."
+    },
+    {
+      "lex": "一切",
+      "tokens": [
+        "一切"
+      ],
+      "segments": [
+        "s1"
+      ],
+      "reason": "Part of 度一切苦厄; absent from the Sanskrit."
+    },
+    {
+      "lex": "苦厄",
+      "tokens": [
+        "苦厄"
+      ],
+      "reason": "Part of 度一切苦厄; absent from the Sanskrit."
+    },
+    {
+      "lex": "色不異空",
+      "tokens": [
+        "色不異空"
+      ],
+      "reason": "Phrase-level IAST removed 2026-10-16: term-level only, to avoid reproducing the CC BY-NC-SA edition text."
+    },
+    {
+      "lex": "空即是色",
+      "tokens": [
+        "空不異色"
+      ],
+      "reason": "Phrase-level IAST removed 2026-10-16: term-level only, to avoid reproducing the CC BY-NC-SA edition text."
+    },
+    {
+      "lex": "色即是空",
+      "tokens": [
+        "色即是空"
+      ],
+      "reason": "Phrase-level IAST removed 2026-10-16: term-level only, to avoid reproducing the CC BY-NC-SA edition text."
+    },
+    {
+      "lex": "空即是色",
+      "tokens": [
+        "空即是色"
+      ],
+      "reason": "Phrase-level IAST removed 2026-10-16: term-level only, to avoid reproducing the CC BY-NC-SA edition text."
+    },
+    {
+      "lex": "不生不滅",
+      "tokens": [
+        "不生不滅"
+      ],
+      "reason": "Phrase-level IAST removed 2026-10-16: term-level only, to avoid reproducing the CC BY-NC-SA edition text."
+    },
+    {
+      "lex": "不增不減",
+      "tokens": [
+        "不增不減"
+      ],
+      "reason": "Phrase-level IAST removed 2026-10-16: term-level only, to avoid reproducing the CC BY-NC-SA edition text."
+    },
+    {
+      "lex": "三世諸佛",
+      "tokens": [
+        "三世諸佛"
+      ],
+      "reason": "Phrase-level IAST removed 2026-10-16: term-level only, to avoid reproducing the CC BY-NC-SA edition text."
+    },
+    {
+      "lex": "般若波羅蜜多咒",
+      "tokens": [
+        "般若波羅蜜多咒"
+      ],
+      "reason": "Phrase-level IAST removed 2026-10-16: term-level only, to avoid reproducing the CC BY-NC-SA edition text."
+    }
+  ],
+  "scope": "Term-level only (single terms and the mantra). Phrase-level renderings of running text are excluded because the GRETIL edition is CC BY-NC-SA 4.0."
+}

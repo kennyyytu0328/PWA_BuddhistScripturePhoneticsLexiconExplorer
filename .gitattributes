@@ -1,0 +1,4 @@
+# Keep LF everywhere: frozen acceptance tests are pinned by sha256, and
+# DFB / CBETA sources are compared character for character (incl. newlines).
+* text=auto eol=lf
+*.png binary
