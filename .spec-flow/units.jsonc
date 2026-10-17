@@ -43,6 +43,22 @@
 
       // 依賴的其他單元名稱；目前沒有共用單元
       "dependsOn": []
+    },
+
+    // 閱讀介面：CLAUDE.md §1（核心體驗）、§4-2（自撰內容區隔，UI 部分）、§6（行動端版面與視覺原則）、
+    // §7（Wake Lock、觸覺回饋）、§8.2、8.4、8.5（直排標點、出處、效能）；讀取 data 單元產物
+    // PWA 安裝與離線（§5、§8.3）另設單元
+    "reader": {
+      "idPrefix": "RDR",
+      "sources": ["CLAUDE.md"],
+      "mocks": [],
+      "workDir": "docs/spec/reader",
+      // Playwright 驗收測試（*.spec.ts），與 vitest 的 *.test.ts 分開
+      "testDirs": ["tests/acceptance/reader"],
+      // 先正式建置（效能量測用 vite preview，REQ-RDR-027），再跑驗收測試，最後檢查覆蓋率（REQ-RDR-028）
+      "acceptanceTestCommands": ["pnpm build", "pnpm exec playwright test tests/acceptance/reader", "pnpm vitest run --coverage"],
+      // 引用 data 單元的產物格式（REQ-DAT-002、003、004）
+      "dependsOn": ["data"]
     }
   }
 }
