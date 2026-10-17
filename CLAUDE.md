@@ -142,7 +142,7 @@ docs/spec/data/                       # data 單元需求登錄表與決議（sp
 ```
 
 Workbox 快取分層：
-1. **App Shell 與字型**（Precache / CacheFirst）：JS、CSS、Noto Serif TC 直排子集字型。
+1. **App Shell 與字型**（Precache / CacheFirst）：JS、CSS、Noto Serif TC 直排子集字型、介面標籤字型子集（§6.5）。
 2. **經文與辭典**（Precache）：`heart-sutra.ast.json`、`lexicon.dfb.json` 於安裝時預快取。
 3. **未來擴充經典／辭典**（StaleWhileRevalidate）：首次查詢時抓取並存入 CacheStorage。
 
@@ -188,6 +188,21 @@ Workbox 快取分層：
 ### 6.4 音標切換膠囊
 
 - 螢幕底部中央半透明膠囊（`backdrop-blur-md bg-stone-900/80`），單手拇指輪替模式，選擇存入 Dexie。
+
+### 6.5 視覺原則（2026-10-17 定案）
+
+借用「單色編輯式」風格參考的原則，不沿用其淺色主題、字型與巨型字級。
+
+- **深色不變**：維持 Zen Mode（stone-950）；經文仍為 Noto Serif TC 直排。
+- **介面標籤字型**：無襯線字（預設 Noto Sans TC），須隨 App 打包子集、離線可用，不得依賴線上字型服務。
+- **介面無彩色**：黑、白、灰階；唯一強調色是 §6.2–6.3 的琥珀色（音標、名相高亮）。
+- **圓角二分**：膠囊（full pill）只用於按鈕與膠囊切換；抽屜、面板、圖片一律直角。
+- **無陰影**：以 1px 細線與明暗區隔層次，不用 box-shadow。
+- **留白與輕字重**：標題用細字重（300–400），不用粗體。
+- **緩動**：轉場用 `cubic-bezier(0.19, 1, 0.22, 1)`；翻頁、抽屜等轉場可較慢，觸控回饋（高亮）須即時（≤ 0.3s）；遵守 `prefers-reduced-motion`。
+- **流光底色**：經文背後可有極淡的虹彩漸層（綠 → 琥珀 → 赭紅），只作背景，不得用於按鈕或控制項。
+  - **靜態**：不做動畫（螢幕常亮時避免耗電）。
+  - **可讀性優先**：漸層濃度以經文與音標（含 10px `<rt>`）皆符合 WCAG AA 為上限；兩者衝突時調淡漸層，不調暗文字。
 
 ## 7. 裝置 API
 
