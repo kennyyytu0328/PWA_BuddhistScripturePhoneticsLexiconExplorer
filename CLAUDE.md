@@ -218,7 +218,13 @@ export function useWakeLock(active: boolean) {
 
     const acquire = async () => {
       try {
-        sentinel = await navigator.wakeLock.request('screen')
+        const lock = await navigator.wakeLock.request('screen')
+        // 請求期間已卸載：之後不會有人釋放，當場釋放
+        if (cancelled) {
+          lock.release()
+          return
+        }
+        sentinel = lock
       } catch (error) {
         console.warn('Wake Lock request failed:', error)
       }

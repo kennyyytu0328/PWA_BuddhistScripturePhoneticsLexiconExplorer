@@ -1,0 +1,23 @@
+{
+  "files": {
+    "tests/acceptance/reader/device.spec.ts": "d5090c51a1b3145605aef4c4700f30ab8a889e20d46053279591c22501dd080a",
+    "tests/acceptance/reader/fonts.spec.ts": "eca4217c7cf768bb520c92de4365d412dcd06f65f2271e53e46081d826f35d5e",
+    "tests/acceptance/reader/helpers.ts": "213b60690114fc575c4ffb4fc17b63670f8632c219551dd4d4d8b4f72901982a",
+    "tests/acceptance/reader/layout.spec.ts": "993e4f41bf19ef47cacbc498d8cbc85ffb3f1a7b91a85ab843179daccb8cd8f6",
+    "tests/acceptance/reader/lexicon.spec.ts": "a6252e4f8eedd544fd6e469cb0f9038cc3fb80f64caa6b361c46349bd76189c1",
+    "tests/acceptance/reader/loading.spec.ts": "20648092d23fd5fdd85d723c4db067713196b02c97d3b4385ac9641d15799353",
+    "tests/acceptance/reader/motion.spec.ts": "b75374263ce7f33e968df162150b969cdc9661805ddc9bde281a31817caa6242",
+    "tests/acceptance/reader/page-helpers.ts": "8e8b713cb2114a78e4e56dc23b6a22dcd4e848bc122e7e578f6578e945ef6fc8",
+    "tests/acceptance/reader/phonetics.spec.ts": "8713cebd518ef8d4249796f77e8c81959c065efa13b6faeef7388a5ce9b130c9",
+    "tests/acceptance/reader/prefs.spec.ts": "bf807a78d195799920bae8fdbdd4ceac71cd9ba4a027c49e39537167a8c82b02",
+    "tests/acceptance/reader/quality.spec.ts": "6d47cdc58a5878c8d0cbca5a8fd832efd826fa9316a738265aa81668b892a369",
+    "tests/acceptance/reader/vernacular.spec.ts": "78e84bee23bdc7def683af9cc02ab53c6c7164df9ee2aede0371f72c9c1b6682",
+    "tests/acceptance/reader/visual.spec.ts": "5968fd6059c1c2a8f33fb75bf9cf8005dfc022e54f52e8a5b2ccb3ecd1865061",
+    "tests/acceptance/reader/wake-lock.test.ts": "e0c92e1453337578d5ebe0668d81193f5809822ad55ce397d9b86c383a60fddf",
+    "tests/acceptance/reader/ruby-fit.spec.ts": "af9e3745f5738b16097d15080621520a3f6c0fa3928adf6d491ec278309203a2",
+    "tests/acceptance/reader/hit-area.spec.ts": "cd43f04950eb1c231382c68bfb0ea660a96c4cc10b04190a671de1596f5201bc",
+    "tests/acceptance/reader/pill-scope.spec.ts": "a09d85a1a32e6e58f18748faa708ef616fdc9dacea899dfbe9387d24ee46991c",
+    "tests/acceptance/reader/hit-area-square.spec.ts": "4136d53c8d37687b1adedd7b000dd1dead28062a40e96fb1924232f1e850ff0b"
+  },
+  "frozenAt": "2026-10-19T07:08:56.948Z"
+}

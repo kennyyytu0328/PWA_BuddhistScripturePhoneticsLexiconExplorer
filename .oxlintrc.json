@@ -4,5 +4,11 @@
   "rules": {
     "react/rules-of-hooks": "error",
     "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
+  },
+  "overrides": [
+    {
+      "files": ["tests/**/*.spec.ts", "tests/**/helpers.ts"],
+      "rules": { "react/rules-of-hooks": "off" }
+    }
+  ]
 }

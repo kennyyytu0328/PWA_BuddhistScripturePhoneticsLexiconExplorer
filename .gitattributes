@@ -2,3 +2,5 @@
 # DFB / CBETA sources are compared character for character (incl. newlines).
 * text=auto eol=lf
 *.png binary
+*.otf binary
+*.woff2 binary

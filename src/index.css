@@ -1,113 +1,414 @@
 @import "tailwindcss";
 
+/* Spec colours as literal values (plan.md): Tailwind's default oklch output would blur the exact hex. */
+@theme {
+  --color-stone-200: #e7e5e4;
+  --color-stone-400: #a8a29e;
+  --color-stone-900: #1c1917;
+  --color-stone-950: #0c0a09;
+  --color-amber-500: #f59e0b;
+  --color-amber-900: #78350f;
+  --font-sans: 'Noto Sans TC', sans-serif;
+  --font-serif: 'Noto Serif TC', serif;
+}
+
+/* --ease-zen (CLAUDE.md §6.5) is set inline on <html> in index.html: Tailwind's
+   build optimizer rewrites 0.19 to .19, and the token must keep its spec spelling. */
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  --rt-color: rgb(245 158 11 / 0.75); /* amber-500 x 0.75 */
+  --active-bg: rgb(120 53 15 / 0.4); /* amber-900 x 0.4 */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
+html,
+body,
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
+  height: 100%;
 }
 
 body {
   margin: 0;
+  overflow: hidden;
+  background-color: var(--color-stone-950);
+  color: var(--color-stone-200);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+/* Zen Mode: scripture area (CLAUDE.md §6.1). Pages sit side by side; rtl starts at the right edge. */
+.sutra-viewport {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  height: 100dvh;
+  width: 100vw;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  direction: rtl;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
+.sutra-page {
+  position: relative;
+  flex: none;
+  box-sizing: border-box;
+  height: 100dvh;
+  min-width: 100vw;
+  direction: ltr;
+  scroll-snap-align: start;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-feature-settings: 'vkrn' on, 'vert' on;
+  font-family: var(--font-serif);
+  font-size: 20px;
+  line-height: 2.8; /* leaves room for <rt> */
+  letter-spacing: 0.12em;
+  padding: 1.5rem 1rem;
 }
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
+
+/* Columns end above the floating controls (capsule and 白話參考 button) instead of running under them:
+   the controls' height plus their bottom offset and a gap, below the page's own 1.5rem top padding. */
+.sutra-text {
+  height: calc(100dvh - 1.5rem - (1.5rem + 44px + 0.75rem + env(safe-area-inset-bottom)));
 }
-p {
+
+/* A token plus the punctuation after it never splits across columns. */
+.no-break {
+  white-space: nowrap;
+}
+
+/* Static iridescent wash behind the scripture: green -> amber -> ochre red, never animated (§6.5). */
+.sutra-glow {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    160deg,
+    rgb(74 222 128 / 0.1) 0%,
+    rgb(245 158 11 / 0.1) 50%,
+    rgb(178 74 40 / 0.12) 100%
+  );
+}
+
+/* Floating phonetic capsule (CLAUDE.md §6.4): stone-900 at 80%, backdrop-blur-md, full pill. */
+.phonetic-toggle {
+  position: fixed;
+  z-index: 2;
+  bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 5rem;
+  min-height: 44px;
+  padding: 0 1.25rem;
+  border: 1px solid rgb(168 162 158 / 0.3);
+  border-radius: 9999px;
+  background-color: rgb(28 25 23 / 0.8);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  color: var(--color-stone-200);
+  font-family: var(--font-sans);
+  font-weight: 400;
+  cursor: pointer;
+}
+
+/* Per-page 白話參考 capsule: pinned to the page's bottom-left, horizontal text on the vertical page. */
+.vernacular-toggle {
+  position: absolute;
+  bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  left: 1rem;
+  writing-mode: horizontal-tb;
+  min-height: 44px;
+  padding: 0 1rem;
+  border: 1px solid var(--color-stone-400);
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--color-stone-200);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.vernacular-panel h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 300;
+  line-height: 1.4;
+}
+
+.vernacular-panel p {
+  margin: 1rem 0 0;
+}
+
+.vernacular-themes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vernacular-themes li {
+  padding: 0.125rem 0.75rem;
+  border: 1px solid var(--color-stone-400);
+  border-radius: 0; /* pills are for buttons only (§6.5) */
+  color: var(--color-stone-400);
+  font-size: 0.8125rem;
+}
+
+/* Name-term token. Its 44px touch length is real layout (lib/rubyLayout.ts), not an overlapping hot area.
+   The bottom border is always present (transparent) so highlighting is shift-free. */
+.lex-token {
+  display: inline-block;
+  box-sizing: content-box;
+  padding: 0;
+  margin: 0;
+  border-bottom: 1px solid transparent;
+  cursor: pointer;
+  line-height: inherit;
+  text-align: start;
+}
+
+/* Keyboard focus only, square and grey (name terms are not capsules, Q-RDR-025). */
+.lex-token:focus {
+  outline: none;
+}
+
+.lex-token:focus-visible {
+  outline: 1px solid var(--color-stone-400);
+  outline-offset: 2px;
+  border-radius: 0;
+}
+
+.lex-token[data-active='true'] {
+  background-color: var(--active-bg);
+  border-bottom-color: var(--color-amber-500);
+}
+
+/* Phonetic annotation. Each character gets a cell (inline, padded) whose length fits its longest annotation
+   (lib/rubyLayout.ts); `<rt>` is out of flow, centred on its cell, so every mode lays out the same. */
+.cell,
+.cell-group {
+  position: relative;
+  display: inline;
+}
+
+rt {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  margin-left: 2px;
+  transform: translateY(-50%);
+  display: block;
+  white-space: nowrap;
+  text-orientation: mixed;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--rt-color);
+}
+
+/* Taiwan convention: the tone mark stands right of the last symbol, the light-tone dot above the symbols. */
+.zy-symbols {
+  position: relative;
+  display: inline-block;
+}
+
+.zy-tone {
+  position: absolute;
+  bottom: 0;
+  left: 100%;
+  display: flex;
+  width: 10px;
+  height: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+.load-error {
+  display: flex;
+  height: 100dvh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  color: var(--color-stone-200);
+  font-weight: 300;
+}
+
+.load-error p {
   margin: 0;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+.pill-button {
+  min-height: 44px;
+  padding: 0 1.5rem;
+  border: 1px solid var(--color-stone-400);
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--color-stone-200);
+  font-family: var(--font-sans);
+  font-weight: 400;
+  cursor: pointer;
 }
 
-code {
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Name-term drawer and 白話參考 panel (CLAUDE.md §6.3, §6.5): square corners, no shadow, blurred backdrop. */
+.lexicon-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background-color: rgb(12 10 9 / 0.5);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.lexicon-drawer,
+.vernacular-panel {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 50;
+  box-sizing: border-box;
+  max-height: 80dvh;
+  border-top: 1px solid var(--color-stone-400);
+  border-radius: 0;
+  box-shadow: none;
+  background-color: var(--color-stone-900);
+  color: var(--color-stone-200);
+  font-family: var(--font-sans);
   font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+  line-height: 1.8;
+  outline: none;
+}
+
+/* Scrolling happens in the body, not the drawer: vaul's ::after filler is absolutely positioned
+   and would otherwise scroll up over the content and swallow taps. */
+.lexicon-body,
+.vernacular-body {
+  box-sizing: border-box;
+  max-height: 80dvh;
+  overflow-y: auto;
+  padding: 1.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
+}
+
+.lexicon-drawer h2,
+.lexicon-drawer h3 {
+  margin: 0;
+  font-weight: 300;
+}
+
+/* The headword is the scripture term itself, so it shares the scripture face (Q-RDR-032). */
+.lexicon-headword {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  line-height: 1.4;
+}
+
+.lexicon-drawer h3 {
+  margin-top: 1.5rem;
+  color: var(--color-stone-400);
+  font-size: 0.8125rem;
+}
+
+.lexicon-drawer p {
+  margin: 0;
+}
+
+.lexicon-drawer ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+[data-testid='lexicon-sense'] {
+  margin-top: 0.75rem;
+}
+
+.adopted-mark,
+[data-testid='lexicon-usg'] {
+  margin-right: 0.5rem;
+  color: var(--color-stone-400);
+  font-size: 0.8125rem;
+}
+
+.lexicon-def {
+  white-space: pre-wrap;
+  font-family: var(--font-serif);
+  --def-size: 15px;
+  font-size: var(--def-size);
+}
+
+.gaiji {
+  display: inline;
+  height: 1em;
+  width: auto;
+  vertical-align: text-bottom;
+}
+
+/* The private-use character stays in the DOM text but is hidden; 〓 stands in for it (Q-RDR-017). */
+.missing-glyph {
+  font-size: 0;
+}
+
+.missing-glyph::before {
+  content: '〓';
+  font-size: var(--def-size);
+}
+
+/* 返回 is a button, so it takes the pill shape (§6.5); same look as the other pill buttons. */
+.lexicon-back,
+[data-testid='lexicon-xref'] {
+  margin-bottom: 0.75rem;
+  min-height: 44px;
+  padding: 0 1.5rem;
+  border: 1px solid var(--color-stone-400);
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--color-stone-200);
+  font: inherit;
+  cursor: pointer;
+}
+
+[data-testid='lexicon-xref'] {
+  margin-right: 0.5rem;
+}
+
+[data-testid='lexicon-xref-text'] {
+  display: inline-block;
+  min-height: 44px;
+  line-height: 44px;
+  color: var(--color-stone-400);
+}
+
+/* Outranks `.lexicon-drawer p { margin: 0 }`. */
+.lexicon-drawer .lexicon-attribution {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-stone-400);
+  color: var(--color-stone-400);
+  font-size: 0.75rem;
+}
+
+/* vaul ships 0.5s cubic-bezier(0.32,0.72,0,1); swap in the spec curve (REQ-RDR-026), but not while dragging. */
+[data-vaul-drawer]:not(.vaul-dragging),
+[data-vaul-overlay]:not(.vaul-dragging) {
+  transition-timing-function: var(--ease-zen) !important;
+  animation-timing-function: var(--ease-zen) !important;
 }

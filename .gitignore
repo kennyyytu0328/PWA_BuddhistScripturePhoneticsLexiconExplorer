@@ -35,3 +35,6 @@ playwright-report
 # DFB download: keep the extracted TEI + gaiji only
 data-sources/dfb/*.zip
 __MACOSX/
+
+# generated font subsets (pnpm build:fonts)
+public/fonts/
