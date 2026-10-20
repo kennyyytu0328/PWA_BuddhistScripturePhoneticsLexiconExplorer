@@ -11,7 +11,7 @@
 
   // 稽核需要 app 執行中（樣式比對、截圖比對）時，提示使用者怎麼啟動
   // 選填，省略時 spec-gate 只會說「請先啟動 app」
-  "appStartHint": "請先執行 pnpm build:data && pnpm dev（http://localhost:5173）",
+  "appStartHint": "請先執行 pnpm build:data && pnpm build:fonts && pnpm build:icons && pnpm dev（http://localhost:5173）",
 
   // 單元清單。key 是單元名稱，執行 /spec-gate <名稱> 時使用
   // 只能用小寫英數與連字號，例如 order、order-export、shared
@@ -59,6 +59,20 @@
       "acceptanceTestCommands": ["pnpm build", "pnpm exec playwright test tests/acceptance/reader", "pnpm vitest run --coverage"],
       // 引用 data 單元的產物格式（REQ-DAT-002、003、004）
       "dependsOn": ["data"]
+    },
+
+    // PWA 安裝與離線：CLAUDE.md §1（PWA：可安裝、100% 離線）、§5（manifest、Workbox 快取分層）、§8.3（離線驗收）；
+    // 快取對象是 data 單元產物（AST、辭典、造字）與 reader 單元的字型子集；離線驗收沿用 reader 的全經呈現與名相抽屜
+    "pwa": {
+      "idPrefix": "PWA",
+      "sources": ["CLAUDE.md"],
+      "mocks": [],
+      "workDir": "docs/spec/pwa",
+      // Playwright 驗收測試（*.spec.ts）；需於測試檔內允許 service worker（全域設定為 block）
+      "testDirs": ["tests/acceptance/pwa"],
+      // service worker 只在正式建置產生，故先 build 再跑驗收測試；覆蓋率門檻沿用 REQ-RDR-028
+      "acceptanceTestCommands": ["pnpm build", "pnpm exec playwright test tests/acceptance/pwa", "pnpm vitest run --coverage"],
+      "dependsOn": ["data", "reader"]
     }
   }
 }

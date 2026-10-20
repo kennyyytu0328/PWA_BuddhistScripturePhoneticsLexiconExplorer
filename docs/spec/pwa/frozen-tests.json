@@ -1,0 +1,14 @@
+{
+  "files": {
+    "tests/acceptance/pwa/helpers.ts": "06934d28c932c8fa62e493934c0bf49140490eb4f77244e416c459f3a323f8ea",
+    "tests/acceptance/pwa/icon-lib.ts": "1d5085e86e1cf11e66113460e18bbe00c9d7d6fa118c3ad405b2cbeb8655c62d",
+    "tests/acceptance/pwa/icons.spec.ts": "a441de733e85a362e126011aa4a5515f6b051eb78c6692bfaab42a2352dad0b3",
+    "tests/acceptance/pwa/manifest.spec.ts": "3a86302aebaddb100d3bea1692809de323da1fc5bf3b501c937383ded653699d",
+    "tests/acceptance/pwa/no-external.spec.ts": "badad1813f6e6b90de59715eb08308ef06d920a7730511043144cd8d35bb362c",
+    "tests/acceptance/pwa/offline.spec.ts": "79236cf649146a7c21b7059dbe639098a8758990043a3fd38483d0d555a6134c",
+    "tests/acceptance/pwa/precache.spec.ts": "392d59623306bdc8b3aa17fd7200b397fe5f664e8708886245ca409b6f7c85dc",
+    "tests/acceptance/pwa/runtime-cache.spec.ts": "53e8b7dab067e4f514f3975ea86b489dfcc4d1d3bbd1efe777a010a2ab8d589b",
+    "tests/acceptance/pwa/update.spec.ts": "057690ebc8f3f26e3a8fbe03226d43173469b58639750ffd275205995a164cc1"
+  },
+  "frozenAt": "2026-10-20T02:24:11.041Z"
+}
