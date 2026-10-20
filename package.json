@@ -7,7 +7,8 @@
     "dev": "vite",
     "build:data": "tsx scripts/build-data.ts",
     "build:fonts": "tsx scripts/build-fonts.ts",
-    "build": "tsx scripts/check-review.ts && pnpm build:data && pnpm build:fonts && tsc -b && vite build",
+    "build:icons": "tsx scripts/build-icons.ts",
+    "build": "tsx scripts/check-review.ts && pnpm build:data && pnpm build:fonts && pnpm build:icons && tsc -b && vite build",
     "test": "vitest run",
     "lint": "oxlint",
     "preview": "vite preview"
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
+    "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",

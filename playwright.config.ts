@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
 // Reader acceptance tests run against the production build (`pnpm build` first, REQ-RDR-027).
-// Service workers are blocked here; offline behaviour belongs to the `pwa` unit.
+// Service workers are blocked here; the `pwa` unit's tests opt in with test.use({ serviceWorkers: 'allow' }).
 export default defineConfig({
   testDir: 'tests',
   testMatch: '**/*.spec.ts',

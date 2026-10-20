@@ -5,6 +5,7 @@ import * as fontkit from 'fontkit'
 import subsetFont from 'subset-font'
 import { z } from 'zod'
 import { parseArgs, readJsonFile } from './lib/io.ts'
+import { openFont } from './lib/open-font.ts'
 import {
   buildCss,
   codePointsOf,
@@ -142,12 +143,6 @@ export async function collectPools(o: Required<FontBuildOptions>): Promise<CharP
     sansCore: union(ui, ascii, phonetics, astLabels, lexLabels),
     sansAll: union(ui, ascii, phonetics, astLabels, lexLabels, astOwn),
   }
-}
-
-function openFont(buffer: Buffer): fontkit.Font {
-  const font = fontkit.create(buffer)
-  if (!('hasGlyphForCodePoint' in font)) throw new Error('不支援字型集合檔（.ttc）')
-  return font
 }
 
 /** 檢查原始字型涵蓋；回傳實際可進子集的字、必須字缺字、可略過的缺字。 */

@@ -38,3 +38,9 @@ __MACOSX/
 
 # generated font subsets (pnpm build:fonts)
 public/fonts/
+
+# generated icons (pnpm build:icons)
+public/pwa-192x192.png
+public/pwa-512x512.png
+public/apple-touch-icon.png
+public/favicon.svg

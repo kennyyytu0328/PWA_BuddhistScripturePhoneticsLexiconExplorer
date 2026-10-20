@@ -55,6 +55,8 @@ scripts/build-data.ts                 # 建置腳本（pnpm build:data）
 public/data/heart-sutra.ast.json      # 建置產物：含逐字音標
 public/data/lexicon.dfb.json          # 建置產物：僅含經文引用到的 DFB 條目
 public/data/gaiji/                    # 建置產物：釋義用到的 DFB 造字 PNG
+scripts/build-icons.ts                # 圖示產生腳本（pnpm build:icons）
+public/{pwa-*.png,apple-touch-icon.png,favicon.svg}  # 建置產物：App 圖示與 favicon（「心」字）
 docs/spec/data/                       # data 單元需求登錄表與決議（spec-flow）
 ```
 
