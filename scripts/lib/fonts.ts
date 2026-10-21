@@ -88,7 +88,7 @@ export function buildCss(faces: FaceSpec[]): string {
   const blocks = faces.map(
     (f) => `@font-face {
   font-family: '${f.family}';
-  src: url('/fonts/${f.file}') format('woff2');
+  src: url('./${f.file}') format('woff2');
   font-style: normal;
   font-weight: 400;
   font-display: block;

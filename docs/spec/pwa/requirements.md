@@ -16,6 +16,7 @@
   - And `icons` 恰為兩項：`/pwa-192x192.png`（192x192、image/png、無 purpose）與 `/pwa-512x512.png`（512x512、image/png、purpose `any maskable`）
   - And `lang` = `zh-Hant`（Q-PWA-007）
   - And 允許外掛自動輸出的 `scope: "/"`（與瀏覽器由 `start_url` 推得的預設值相同，Q-PWA-010）
+  - 註：上列 `/` 為預設 base。GitHub Pages 部署以 `BASE_PATH=/<repo>/` 建置，`start_url`、`scope`、`icons` 一律改以該路徑開頭（2026-10-21 定案）
 - 狀態：確認
 
 ### REQ-PWA-002 App 圖示

@@ -3,8 +3,15 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// '/' locally and in tests; the GitHub Pages workflow sets '/<repo>/'
+const base = process.env.BASE_PATH ?? '/'
+
+// Service worker global: its scope is the base path. urlPattern is serialised into sw.js, so it cannot close over `base`.
+declare const registration: { scope: string }
+
 // https://vite.dev/config/
 export default defineConfig({
+  base,
   plugins: [
     react(),
     tailwindcss(),
@@ -28,10 +35,11 @@ export default defineConfig({
           'data/lexicon.dfb.json',
           'data/gaiji/*.png',
         ],
-        // tier 3: future sutras / dictionaries under /data/ that are not precached (Q-PWA-002)
+        // tier 3: future sutras / dictionaries under <base>data/ that are not precached (Q-PWA-002)
         runtimeCaching: [
           {
-            urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/data/'),
+            urlPattern: ({ url, sameOrigin }) =>
+              sameOrigin && url.pathname.startsWith(new URL('data/', registration.scope).pathname),
             handler: 'StaleWhileRevalidate',
             // no expiration yet: add an ExpirationPlugin limit once real extension content exists
             options: { cacheName: 'sutraflow-extensions' },
@@ -43,14 +51,14 @@ export default defineConfig({
         name: '心經·逐字解讀沉浸器',
         lang: 'zh-Hant',
         short_name: '心經',
-        start_url: '/',
+        start_url: base,
         display: 'standalone',
         background_color: '#0c0a09',
         theme_color: '#0c0a09',
         orientation: 'portrait',
         icons: [
-          { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+          { src: `${base}pwa-192x192.png`, sizes: '192x192', type: 'image/png' },
+          { src: `${base}pwa-512x512.png`, sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
       },
     }),

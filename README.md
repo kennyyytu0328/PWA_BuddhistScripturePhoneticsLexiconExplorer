@@ -58,6 +58,21 @@ Get the text from <https://cbdata.dila.edu.tw/stable/juans?work=T0251&juan=1>. L
 
 First Playwright run: `pnpm exec playwright install chromium`.
 
+## Deploy (GitHub Pages)
+
+Every push to `main` runs [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml): it installs, runs `pnpm test`, builds with `BASE_PATH=/<repo>/` and publishes `dist/` to GitHub Pages.
+
+One-time setup:
+
+1. **Settings → Pages → Build and deployment → Source: GitHub Actions.**
+2. Store the CBETA text as a repository secret, base64-encoded:
+
+   ```bash
+   base64 -w0 data-sources/cbeta/T08n0251.txt | gh secret set CBETA_T08N0251_B64
+   ```
+
+To try a subpath build locally: `BASE_PATH=/<repo>/ pnpm build && BASE_PATH=/<repo>/ pnpm preview`. In Git Bash, prefix with `MSYS_NO_PATHCONV=1` so the path is not rewritten.
+
 ## Project layout
 
 ```

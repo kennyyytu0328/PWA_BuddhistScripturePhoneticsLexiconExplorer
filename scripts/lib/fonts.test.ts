@@ -58,7 +58,8 @@ describe('css output', () => {
   it('emits a block-display font-face per file', () => {
     const css = buildCss([{ family: 'Noto Serif TC', file: 'a.woff2', codePoints: new Set([0x4e00]) }])
     expect(css).toContain("font-family: 'Noto Serif TC'")
-    expect(css).toContain("src: url('/fonts/a.woff2') format('woff2')")
+    // relative to fonts.css, so the subsets resolve under any base path (GitHub Pages)
+    expect(css).toContain("src: url('./a.woff2') format('woff2')")
     expect(css).toContain('font-display: block')
     expect(css).toContain('unicode-range: U+4E00;')
   })

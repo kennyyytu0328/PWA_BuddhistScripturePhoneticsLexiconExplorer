@@ -143,6 +143,8 @@ docs/spec/data/                       # data 單元需求登錄表與決議（sp
 }
 ```
 
+上列 `/` 為預設 base。GitHub Pages（`.github/workflows/deploy-pages.yml`）以 `BASE_PATH=/<repo>/` 建置，`start_url`、`scope`、`icons` 隨之改變；App 內資料與字型一律用相對路徑，不得寫死 `/` 開頭（2026-10-21 定案）。CBETA 原文以 repo secret `CBETA_T08N0251_B64`（base64）提供給 CI。
+
 Workbox 快取分層：
 1. **App Shell 與字型**（Precache / CacheFirst）：JS、CSS、Noto Serif TC 直排子集字型、介面標籤字型子集（§6.5）。
 2. **經文與辭典**（Precache）：`heart-sutra.ast.json`、`lexicon.dfb.json` 於安裝時預快取。
