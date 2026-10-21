@@ -23,6 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 
+# CBETA source text: build-time comparison only, kept out of the public repo (THIRD_PARTY_NOTICES.md)
+data-sources/cbeta/
+
 # build artifacts
 public/data/
 coverage

@@ -49,7 +49,7 @@ data/readings.lock.json               # 已審閱的全經讀音快照（建置�
 data/iast.json                        # 梵文 IAST 對照表（已審定）
 review/                               # 讀音、白話審閱報告
 data-sources/dfb/…/dingfubao.xml      # DFB TEI 原始檔（31,366 條）
-data-sources/cbeta/T08n0251.txt       # CBETA 原文（建置期比對用，不隨 App 散布）
+data-sources/cbeta/T08n0251.txt       # CBETA 原文（建置期比對用，不隨 App 散布；不進 git repo，見 THIRD_PARTY_NOTICES.md）
 data-sources/legacy/sutra-db.v0.json  # 舊版資料，僅供參考，不再使用
 scripts/build-data.ts                 # 建置腳本（pnpm build:data）
 public/data/heart-sutra.ast.json      # 建置產物：含逐字音標

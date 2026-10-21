@@ -83,12 +83,21 @@ function buildAst(
   }
 }
 
+// CBETA 原文不進 repo（授權，見 THIRD_PARTY_NOTICES.md），缺檔時說明取得方式。
+async function readCbeta(path: string): Promise<string> {
+  try {
+    return await readFile(path, 'utf8')
+  } catch (error) {
+    throw new Error(`無法讀取 CBETA 原文 ${path}（不在 repo 內，取得方式見 THIRD_PARTY_NOTICES.md）：${(error as Error).message}`)
+  }
+}
+
 async function runBuild(o: Required<BuildOptions>): Promise<BuildResult> {
   const sutra = await readJsonFile(o.sutra, SutraSchema)
   const iast = await readJsonFile(o.iast, IastFileSchema)
   const lock = await readJsonFile(o.lock, LockFileSchema)
   const { index: dfb, unsupported } = await loadDfb(o.dfb)
-  const cbeta = await readFile(o.cbeta, 'utf8')
+  const cbeta = await readCbeta(o.cbeta)
 
   const resolved = resolveSenses(sutra, dfb)
   const segmentReadings = sutra.segments.map(buildSegmentReadings)
