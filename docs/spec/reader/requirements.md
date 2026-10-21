@@ -1,5 +1,5 @@
 # 需求登錄表 — reader 單元
-> 狀態：已確認（2026-10-17，使用者確認；Q-RDR-001～015、017～032 採 A，016 採 B，皆已併入；REQ-RDR-029 於 2026-10-19 依 Q-RDR-018 新增）。
+> 狀態：已確認（2026-10-17，使用者確認；Q-RDR-001～015、017～032 採 A，016 採 B，皆已併入；REQ-RDR-029 於 2026-10-19 依 Q-RDR-018 新增；2026-10-20 實機試看後依 Q-RDR-036～038 修改 REQ-RDR-002、003、008、011，新增 REQ-RDR-030；2026-10-21 依 Q-RDR-042 新增 REQ-RDR-031）。
 > 來源：`CLAUDE.md`（行號依 2026-10-17 版本，commit 2279ebe）；依賴單元 `data`：產物格式見 `docs/spec/data/requirements.md` 的 REQ-DAT-002（AST）、003（辭典）、004（授權）、011／012（釋義與造字）、016（IAST）、019（無 lex 不可點擊）。
 > 範圍：§1 核心體驗、§4-2（UI 部分）、§6、§7、§8.2、8.4、8.5、8.6。PWA 安裝與離線（§5、§8.3）屬後續 `pwa` 單元。
 
@@ -24,8 +24,8 @@
   - Given 閱讀畫面
   - When 讀取經文容器的 computed style
   - Then `height` 等於視窗動態高度（100dvh）、`width` 等於視窗寬度、`overflow-x: auto`、`overflow-y: hidden`、`overscroll-behavior-x: contain`、`scroll-snap-type: x mandatory`、`direction: rtl`
-  - And 初次載入時顯示的是經首（第一頁位於畫面最右側並完整可見）
-  - And 頁面由右向左依序推進：手指由左向右拖曳（原生 rtl 捲動）前往下一頁，放開後停靠在頁首（Q-RDR-024）
+  - And 初次載入時顯示的是封面（REQ-RDR-030；封面位於畫面最右側並完整可見，Q-RDR-038）
+  - And 頁面由右向左依序推進：手指由左向右拖曳（原生 rtl 捲動）前往下一頁，放開後停靠在頁首（Q-RDR-024）；由封面前進一次到經文第 1 頁，再一次到第 2 頁
 - 狀態：確認
 
 ### REQ-RDR-003 經摺頁樣式
@@ -35,8 +35,9 @@
 - 驗收：
   - Given 任一頁
   - When 讀取頁面元素的 computed style
-  - Then `scroll-snap-align: start`、`writing-mode: vertical-rl`、`text-orientation: upright`、`font-feature-settings` 含 `"vkrn"` 與 `"vert"`、字型為 Noto Serif TC、`line-height` 為字級的 2.8 倍、`letter-spacing` 為 0.12em、padding 為 1.5rem（上下）1rem（左右）
-  - And 一段一頁：共 9 頁，第 n 頁依序含 AST 第 n 段的全部 token；每頁寬度至少一個視窗寬（Q-RDR-001）
+  - Then `scroll-snap-align: start`、`writing-mode: vertical-rl`、`text-orientation: upright`、`font-feature-settings` 含 `"vkrn"` 與 `"vert"`、字型為 Noto Serif TC、`line-height` 為字級的 2.8 倍、`letter-spacing` 為 0.5em（Q-RDR-036）、padding 為 1.5rem（上下）1rem（左右）
+  - And 一段一頁：共 9 頁經文頁（封面另計，見 REQ-RDR-030），第 n 頁依序含 AST 第 n 段的全部 token；每頁寬度至少一個視窗寬（Q-RDR-001）
+  - And（Q-RDR-036）每個字沿直行方向佔的長度至少為字級 × 1.5（20px 字級即 30px），在無音標模式下亦同
 - 狀態：確認
 
 ### REQ-RDR-004 全經完整呈現
@@ -94,7 +95,7 @@
   - Then 帶 `iast` 的 token 以整個 token 為單位標註該值；無 `iast` 的 token 不顯示音標
   - Given 音標模式為無音標
   - Then 不顯示任何 `<rt>`，且經文位置不跳動（見 REQ-RDR-026 的 CLS）
-  - And（Q-RDR-022）在注音、拼音、IAST 三種模式下，每個 `<rt>` 沿直行方向的範圍都落在其基字所佔的格（含為容納音標加長的部分；IAST 為整個 token 的格）內，任兩個 `<rt>` 不重疊；`<rt>` 字級維持 10px。每個字沿直行方向佔的長度依該字在三種模式中最長的音標決定，三種模式與無音標模式的經文位置相同
+  - And（Q-RDR-022）在注音、拼音、IAST 三種模式下，每個 `<rt>` 沿直行方向的範圍都落在其基字所佔的格（含為容納音標加長的部分；IAST 為整個 token 的格）內，任兩個 `<rt>` 不重疊；同一直行相鄰兩個 `<rt>` 沿直行方向的間距至少 6px（Q-RDR-037）；`<rt>` 字級維持 10px。每個字沿直行方向佔的長度依該字在三種模式中最長的音標決定，三種模式與無音標模式的經文位置相同
   - And（Q-RDR-023）注音依台灣直排慣例：聲調符號（ˊ ˇ ˋ）位於注音符號右側、與最後一個符號並排；輕聲點（˙）位於注音符號上方（目前經文無輕聲字）；`<rt>` 的文字內容仍逐字等於 `zy`
 - 狀態：確認
 
@@ -128,7 +129,8 @@
   - Given 翻到第 4 頁並停靠
   - When 重新載入頁面
   - Then 畫面停在第 4 頁；進度存在 IndexedDB（Dexie）
-  - And 首次使用（無紀錄）時停在經首（Q-RDR-007）
+  - And 首次使用（無紀錄）時停在封面（Q-RDR-007、Q-RDR-038）
+  - And 停在封面時重新載入，仍停在封面（封面也是一頁，Q-RDR-038）
 - 狀態：確認
 
 ## 名相抽屜
@@ -336,4 +338,40 @@
   - Then 畫面顯示一行「經文載入失敗」與一個膠囊按鈕「重新載入」，不顯示部分經文
   - When 點擊「重新載入」
   - Then 重新載入兩個檔案；成功後顯示經文
+- 狀態：確認
+
+## 封面
+
+### REQ-RDR-030 經題封面
+- 來源：CLAUDE.md §1（第 9 行，2026-10-20 新增）；Q-RDR-038；經題與譯者依 CBETA T08n0251（`data-sources/cbeta/T08n0251.txt`，大正藏作「唐三藏法師玄奘譯」）
+- 類型：UI
+- 驗收：
+  - Given 閱讀畫面
+  - Then 經摺最右側（第一頁，位於經文第 1 頁之前）為封面，`data-testid="sutra-cover"`，不帶 `data-testid="sutra-page"`（經文頁仍為 9 頁）
+  - And 封面與經文頁同為 `writing-mode: vertical-rl`、`scroll-snap-align: start`，寬度等於一個視窗寬
+  - And 封面有兩行直排文字：經題（`data-testid="cover-title"`）文字為「般若波羅蜜多心經」；譯者（`data-testid="cover-translator"`）`textContent` 逐字為「唐　三藏法師玄奘　譯」（兩處皆為全形空白 U+3000，Q-RDR-039）
+  - And 經題在右、譯者在左（直排由右而左的閱讀順序）；兩行合起來在封面上水平置中、垂直置中（各 ±8px）
+  - And 經題與譯者皆為 Noto Serif TC，字重 300–400（§6.5）；經題字級至少為經文字級的 1.5 倍，譯者字級小於經題字級
+  - And 封面沒有 `<ruby>`／`<rt>`、沒有可點擊的名相、沒有「白話參考」按鈕；音標膠囊（§6.4）照常顯示
+  - And 封面文字顏色與經文相同；流光底色延續到封面（§6.5）
+- 狀態：確認
+
+### REQ-RDR-031 滑動提示與首次輕推
+- 來源：CLAUDE.md §1（第 9 行，2026-10-21 新增）；Q-RDR-042
+- 類型：UI／行為
+- 驗收：
+  - Given 閱讀畫面
+  - Then 封面內有一個滑動提示（`data-testid="swipe-hint"`），`textContent` 逐字為「‹ 向右滑動翻頁」；全 App 只有這一個，經文頁沒有
+  - And 提示為橫排（`writing-mode: horizontal-tb`）、介面標籤字型 Noto Sans TC、字重 300–400、字級 12–14px；顏色為灰階（R、G、B 三值相差 ≤ 16），與 `#0c0a09` 的對比 ≥ 4.5:1（§6.5、WCAG AA）
+  - And 提示位於封面左下：左緣距封面左緣 ≥ 16px，下緣位於視窗高度 85% 以下且不超出視窗；不與音標膠囊、經題、譯者重疊（360×640 與 Pixel 7 皆同）
+  - And 提示不可點擊、不可聚焦（不是 button／a，沒有 tabindex），不影響 REQ-RDR-030 的經題置中
+  - Given 首次在封面開啟（IndexedDB `sutraflow/prefs` 沒有 `peek` 紀錄），且未設定 `prefers-reduced-motion: reduce`
+  - When 載入完成
+  - Then 3 秒內經摺內容整體向右輕推：經文第 1 頁右緣最多出現在視窗內 32–48px 處，之後回到封面對齊（封面右緣 = 視窗右緣 ±1.5px）；整個輕推在 2.5 秒內完成，緩動為 `cubic-bezier(0.19, 1, 0.22, 1)`（§6.5）
+  - And 輕推不改變捲動位置、不寫入閱讀進度；完成後寫入 `peek` 紀錄，之後重新載入不再輕推
+  - And 輕推中或開始前若使用者觸控或捲動，輕推立即停止、內容回到原位，並視同完成（寫入 `peek` 紀錄）
+  - Given 依 REQ-RDR-011 開在經文頁（非封面）
+  - Then 不輕推，也不寫入 `peek` 紀錄
+  - Given `prefers-reduced-motion: reduce`
+  - Then 不輕推；滑動提示照常顯示
 - 狀態：確認

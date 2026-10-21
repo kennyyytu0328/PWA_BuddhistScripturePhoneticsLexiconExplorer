@@ -6,7 +6,7 @@
 - **試行經文**：《般若波羅蜜多心經》玄奘譯本，流通本（含咒語）
 - **核心體驗**：
   - **沉浸讀經（Zen Mode）**：全螢幕、無頂底導航，深色背景（stone-950）。
-  - **直排經摺翻頁**：`writing-mode: vertical-rl`，水平由右向左滑動，CSS Scroll Snap 停靠。
+  - **直排經摺翻頁**：`writing-mode: vertical-rl`，水平由右向左滑動，CSS Scroll Snap 停靠。第一頁為封面：經題「般若波羅蜜多心經」與譯者「唐 三藏法師玄奘 譯」（2026-10-20 定案）。封面左下有滑動提示「‹ 向右滑動翻頁」；首次在封面開啟時，經摺自動輕推約 40px 露出經文第 1 頁邊緣後彈回，只做一次，`prefers-reduced-motion` 時不推（2026-10-21 定案）。
   - **名相解讀抽屜**：點擊名相 → 微震動 → 高亮 → 底部 Bottom Sheet 顯示辭典釋義；不用 Popover。
   - **音標切換**：注音 → 拼音 → 梵文(IAST) → 無音標，以 `<ruby>` 呈現。
   - **PWA**：可安裝（standalone）、100% 離線、螢幕常亮（Wake Lock）、觸覺回饋（Vibration）。
@@ -170,7 +170,7 @@ Workbox 快取分層：
   font-feature-settings: "vkrn" on, "vert" on;
   font-family: "Noto Serif TC", serif;
   line-height: 2.8;               /* 預留 <rt> 空間 */
-  letter-spacing: 0.12em;
+  letter-spacing: 0.5em;          /* 字與字之間留白（2026-10-20 由 0.12em 放寬） */
   padding: 1.5rem 1rem;
 }
 ```
@@ -179,6 +179,7 @@ Workbox 快取分層：
 
 - 經文字級 18–22px；可點擊 token 為 `inline-block`，觸控熱區 ≥ 44×44px。
 - `<rt>`：sans-serif、10px、低對比（如 `text-amber-500/75`）。
+- 同一直行相鄰兩個 `<rt>` 之間至少留 6px（注音、拼音、IAST 皆同；2026-10-20 定案）。
 
 ### 6.3 Bottom Sheet 互動
 
