@@ -7,9 +7,11 @@ import {
   expect,
   expectPageAligned,
   firstFamily,
+  gotoCover,
   gotoReader,
   installDeviceStubs,
   pageEl,
+  setMode,
   shotBase64,
   swipeToNextPage,
   tcall,
@@ -48,8 +50,8 @@ test.describe('layout', () => {
     expect(Math.abs(rect.height - h)).toBeLessThanOrEqual(1)
   })
 
-  test('[REQ-RDR-002] vertical container: computed style, starts at the first page, snaps page by page', async ({ page }) => {
-    await gotoReader(page)
+  test('[REQ-RDR-002] vertical container: computed style, starts at the cover, snaps page by page (cover -> s1 -> s2)', async ({ page }) => {
+    await gotoCover(page)
     const vp = page.getByTestId('sutra-viewport')
     const { w, h } = await viewportSize(page)
     const cs = await vp.evaluate((el) => {
@@ -72,21 +74,23 @@ test.describe('layout', () => {
     expect(cs.scrollSnapType).toBe('x mandatory')
     expect(cs.direction).toBe('rtl')
 
-    // first page is at the right edge and fully visible
-    const first = await pageEl(page, 's1').evaluate((el) => el.getBoundingClientRect().toJSON())
-    expect(first.right).toBeGreaterThanOrEqual(w - 1)
-    expect(first.right).toBeLessThanOrEqual(w + 1)
-    expect(first.left).toBeGreaterThanOrEqual(-1)
+    // the cover (REQ-RDR-030) is at the right edge and fully visible; page 1 lies directly to its left
+    const cover = await page.getByTestId('sutra-cover').evaluate((el) => el.getBoundingClientRect().toJSON())
+    expect(cover.right).toBeGreaterThanOrEqual(w - 1)
+    expect(cover.right).toBeLessThanOrEqual(w + 1)
+    expect(cover.left).toBeGreaterThanOrEqual(-1)
     expect(await vp.evaluate((el) => el.scrollLeft)).toBe(0)
+    const s1 = await pageEl(page, 's1').evaluate((el) => el.getBoundingClientRect().toJSON())
+    expect(Math.abs(s1.right - cover.left), 'page 1 starts where the cover ends').toBeLessThanOrEqual(1)
 
-    // swiping forward lands exactly on the head of page 2, then page 3
+    // swiping forward lands exactly on the head of page 1, then page 2
+    await swipeToNextPage(page)
+    await expectPageAligned(page, 's1')
     await swipeToNextPage(page)
     await expectPageAligned(page, 's2')
-    await swipeToNextPage(page)
-    await expectPageAligned(page, 's3')
   })
 
-  test('[REQ-RDR-003] page style: snap align, vertical-rl, upright, vkrn/vert, Noto Serif TC, 2.8 line-height, 0.12em spacing, padding', async ({ page }) => {
+  test('[REQ-RDR-003] page style: snap align, vertical-rl, upright, vkrn/vert, Noto Serif TC, 2.8 line-height, 0.5em spacing, padding', async ({ page }) => {
     await gotoReader(page)
     const info = await page.evaluate(() => {
       const pages = [...document.querySelectorAll('[data-testid="sutra-page"]')] as HTMLElement[]
@@ -125,7 +129,7 @@ test.describe('layout', () => {
       expect(s.features, label).toContain('"vert"')
       expect(firstFamily(s.family), label).toBe('Noto Serif TC')
       expect(parseFloat(s.lineHeight) / s.fontSize, label).toBeCloseTo(2.8, 2)
-      expect(parseFloat(s.letterSpacing) / s.fontSize, label).toBeCloseTo(0.12, 2)
+      expect(parseFloat(s.letterSpacing) / s.fontSize, label).toBeCloseTo(0.5, 2)
       expect(parseFloat(s.pt), label).toBeCloseTo(1.5 * info.rootPx, 1)
       expect(parseFloat(s.pb), label).toBeCloseTo(1.5 * info.rootPx, 1)
       expect(parseFloat(s.pl), label).toBeCloseTo(1 * info.rootPx, 1)
@@ -133,6 +137,45 @@ test.describe('layout', () => {
       expect(s.width, `${label} width at least one window width`).toBeGreaterThanOrEqual(info.winW - 1)
     }
   })
+
+  for (const mode of ['zhuyin', 'none'] as const) {
+    test(`[REQ-RDR-003] ${mode} mode: every character takes at least 1.5 x font size along its column (30px at 20px)`, async ({ page }) => {
+      await gotoReader(page)
+      await setMode(page, mode)
+      const info = await page.evaluate(() => {
+        const out: { seg: string | null; ch: string; fontSize: number; pitch: number }[] = []
+        for (const pg of document.querySelectorAll('[data-testid="sutra-page"]')) {
+          const chars: { ch: string; cx: number; top: number; fontSize: number }[] = []
+          const walker = document.createTreeWalker(pg, NodeFilter.SHOW_TEXT)
+          let n: Node | null
+          while ((n = walker.nextNode())) {
+            const parent = (n as Text).parentElement
+            if (!parent || parent.closest('rt, rp, button[data-testid="vernacular-toggle"]')) continue
+            const s = n.textContent ?? ''
+            for (let i = 0; i < s.length; i++) {
+              const r = document.createRange()
+              r.setStart(n, i)
+              r.setEnd(n, i + 1)
+              const b = r.getBoundingClientRect()
+              if (b.width === 0 && b.height === 0) continue
+              chars.push({ ch: s[i], cx: (b.left + b.right) / 2, top: b.top, fontSize: parseFloat(getComputedStyle(parent).fontSize) })
+            }
+          }
+          for (let i = 1; i < chars.length; i++) {
+            const a = chars[i - 1]
+            const b = chars[i]
+            if (Math.abs(a.cx - b.cx) < a.fontSize / 2 && b.top > a.top) {
+              out.push({ seg: (pg as HTMLElement).dataset.segment ?? null, ch: a.ch + b.ch, fontSize: a.fontSize, pitch: b.top - a.top })
+            }
+          }
+        }
+        return out
+      })
+      expect(info.length, 'consecutive character pairs measured').toBeGreaterThan(100)
+      const tooTight = info.filter((p) => p.pitch < p.fontSize * 1.5 - 0.5)
+      expect(tooTight.slice(0, 5)).toEqual([])
+    })
+  }
 
   test('[REQ-RDR-003] page n holds exactly the tokens of AST segment n, in order', async ({ page }) => {
     await gotoReader(page)

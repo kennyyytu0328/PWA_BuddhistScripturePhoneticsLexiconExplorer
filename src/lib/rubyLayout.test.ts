@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { BASE_LENGTH, MIN_TOUCH_LENGTH, TOUCH_MARGIN, cellLengths, latinLength, zhuyinLength, zhuyinParts } from './rubyLayout'
+import {
+  BASE_LENGTH,
+  MIN_TOUCH_LENGTH,
+  RT_GAP,
+  TOUCH_MARGIN,
+  cellLengths,
+  latinLength,
+  zhuyinLength,
+  zhuyinParts,
+} from './rubyLayout'
 import type { WordToken } from './types'
 
 describe('zhuyinParts', () => {
@@ -18,10 +27,11 @@ describe('zhuyinParts', () => {
 })
 
 describe('lengths', () => {
-  it('stacks symbols at 10px each, tone excluded', () => {
-    expect(zhuyinLength('ㄍㄨㄢ')).toBe(32)
-    expect(zhuyinLength('ㄗㄞˋ')).toBe(22)
-    expect(zhuyinLength('˙ㄉㄜ')).toBe(32)
+  it('stacks symbols at 10px each, tone excluded, plus the gap to the next annotation', () => {
+    expect(RT_GAP).toBe(6)
+    expect(zhuyinLength('ㄍㄨㄢ')).toBe(36)
+    expect(zhuyinLength('ㄗㄞˋ')).toBe(26)
+    expect(zhuyinLength('˙ㄉㄜ')).toBe(36)
   })
 
   it('estimates Latin text wider for m and w', () => {

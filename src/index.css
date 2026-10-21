@@ -62,8 +62,66 @@ body {
   font-family: var(--font-serif);
   font-size: 20px;
   line-height: 2.8; /* leaves room for <rt> */
-  letter-spacing: 0.12em;
+  letter-spacing: 0.5em; /* Q-RDR-036; annotated cells carry it as padding, see .cell */
   padding: 1.5rem 1rem;
+}
+
+/* Cover (REQ-RDR-030): the first fold, exactly one window wide, title and translator centred. */
+.sutra-cover {
+  position: relative;
+  flex: none;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  height: 100dvh;
+  width: 100vw;
+  direction: ltr;
+  scroll-snap-align: start;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-feature-settings: 'vkrn' on, 'vert' on;
+  font-family: var(--font-serif);
+}
+
+/* Letter-spacing trails every glyph; the matching text-indent puts the same space before the first one,
+   so each column is centred on its glyphs. */
+.cover-title,
+.cover-translator {
+  margin: 0;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: var(--cover-tracking);
+  text-indent: var(--cover-tracking);
+  white-space: nowrap;
+}
+
+.cover-title {
+  --cover-tracking: 0.3em;
+  font-size: 32px;
+}
+
+.cover-translator {
+  --cover-tracking: 0.2em;
+  margin-block-start: 1.5rem;
+  font-size: 18px;
+}
+
+/* Swipe hint (REQ-RDR-031): a quiet label at the cover's bottom-left, level with the phonetic capsule. */
+.swipe-hint {
+  position: absolute;
+  bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  left: 1.5rem;
+  margin: 0;
+  writing-mode: horizontal-tb;
+  color: var(--color-stone-400);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 44px;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
 }
 
 /* Columns end above the floating controls (capsule and 白話參考 button) instead of running under them:
@@ -195,6 +253,18 @@ body {
 .cell-group {
   position: relative;
   display: inline;
+}
+
+/* The page's letter-spacing would trail the glyph and pull it off the centre of its cell; the cell's
+   even padding (Token.tsx) already includes that space. */
+.cell {
+  letter-spacing: 0;
+}
+
+/* The cell before it ends with only half the letter-spacing; the other half goes before the mark, so a
+   mark keeps the full 0.5em from its character (Q-RDR-036). */
+.punct {
+  padding-inline-start: 0.25em;
 }
 
 rt {

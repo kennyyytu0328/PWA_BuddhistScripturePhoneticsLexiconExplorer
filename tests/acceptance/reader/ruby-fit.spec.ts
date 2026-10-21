@@ -76,6 +76,40 @@ for (const mode of ['zhuyin', 'pinyin', 'iast'] as const) {
   })
 }
 
+for (const mode of ['zhuyin', 'pinyin', 'iast'] as const) {
+  test(`[REQ-RDR-008] ${mode}: adjacent <rt> in the same column are at least 6px apart along the column`, async ({ page }) => {
+    await gotoReader(page)
+    await setMode(page, mode)
+    const rts = await page.evaluate(collectRts, mode)
+    expect(rts.length).toBeGreaterThan(0)
+    const byPage = new Map<string, R[]>()
+    for (const r of rts) byPage.set(r.page ?? '?', [...(byPage.get(r.page ?? '?') ?? []), r.text!])
+    const tooClose: unknown[] = []
+    let pairs = 0
+    for (const [pg, list] of byPage) {
+      const sorted = [...list].sort((a, b) => (a.left + a.right) / 2 - (b.left + b.right) / 2)
+      const columns: R[][] = []
+      for (const item of sorted) {
+        const last = columns[columns.length - 1]
+        const cx = (item.left + item.right) / 2
+        const refX = last ? (last[0].left + last[0].right) / 2 : 0
+        if (last && Math.abs(cx - refX) < 14) last.push(item)
+        else columns.push([item])
+      }
+      for (const col of columns) {
+        const ys = [...col].sort((a, b) => a.top - b.top)
+        for (let k = 1; k < ys.length; k++) {
+          pairs++
+          const gap = ys[k].top - ys[k - 1].bottom
+          if (gap < 6 - 0.1) tooClose.push({ pg, gap, aBottom: ys[k - 1].bottom, bTop: ys[k].top })
+        }
+      }
+    }
+    expect(pairs, 'adjacent rt pairs measured').toBeGreaterThan(20)
+    expect(tooClose.slice(0, 5)).toEqual([])
+  })
+}
+
 test('[REQ-RDR-008] token rectangles are identical (<=1px) in zhuyin, pinyin, iast and no-phonetics modes', async ({ page }) => {
   await gotoReader(page)
   const rects: Record<string, R[]> = {}

@@ -84,7 +84,51 @@ export function firstFamily(fontFamily: string): string {
 // ---------------------------------------------------------------------------
 // Reader navigation
 // ---------------------------------------------------------------------------
-export async function gotoReader(page: Page): Promise<void> {
+/** Load the reader and wait for fonts. The reader starts on the cover (REQ-RDR-030); nothing is scrolled. */
+export async function gotoCover(page: Page): Promise<void> {
+  // Q-RDR-043 (A): existing tests behave as if the first-use nudge (REQ-RDR-031) was already seen.
+  await seedPrefs(page, { peek: true })
+  await openReaderPage(page)
+}
+
+/**
+ * Seed IndexedDB `sutraflow/prefs` before any app script runs (Dexie version 1 = native version 10).
+ * Existing records are never overwritten, so the init script is safe to run again on every reload.
+ * `peek` writes { key: 'peek', value: 'done' }; `progress` writes { key: 'progress', value: <seg id | 'cover'> }.
+ */
+export async function seedPrefs(page: Page, seed: { peek?: boolean; progress?: string }): Promise<void> {
+  await page.addInitScript((s) => {
+    const records: { key: string; value: string }[] = []
+    if (s.peek) records.push({ key: 'peek', value: 'done' })
+    if (s.progress) records.push({ key: 'progress', value: s.progress })
+    if (!records.length) return
+    const open = indexedDB.open('sutraflow', 10)
+    open.onupgradeneeded = () => {
+      if (!open.result.objectStoreNames.contains('prefs')) open.result.createObjectStore('prefs', { keyPath: 'key' })
+    }
+    open.onsuccess = () => {
+      const db = open.result
+      if (!db.objectStoreNames.contains('prefs')) { db.close(); return }
+      const store = db.transaction('prefs', 'readwrite').objectStore('prefs')
+      for (const r of records) {
+        const req = store.add(r)
+        req.onerror = (e) => e.preventDefault()
+      }
+      db.close()
+    }
+  }, seed)
+}
+
+/**
+ * Load the reader WITHOUT the `peek` record (first use), for REQ-RDR-031 tests only.
+ * `progress` optionally pre-seeds a reading position (REQ-RDR-011) without a `peek` record.
+ */
+export async function gotoCoverWithPeek(page: Page, opts: { progress?: string } = {}): Promise<void> {
+  if (opts.progress) await seedPrefs(page, { progress: opts.progress })
+  await openReaderPage(page)
+}
+
+async function openReaderPage(page: Page): Promise<void> {
   await page.goto('/')
   await expect(page.getByTestId('sutra-page')).toHaveCount(9, { timeout: 10_000 })
   // let the web fonts finish loading so measurements and screenshots are stable
@@ -92,6 +136,23 @@ export async function gotoReader(page: Page): Promise<void> {
     await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
     await document.fonts.ready
   })
+}
+
+/**
+ * Load the reader and turn from the cover to page 1 (REQ-RDR-002), so tests written for "page 1 is on screen"
+ * keep their meaning. The swipe only happens when the reader opened on the cover; a restored reading
+ * position (REQ-RDR-011) is left alone. Use gotoCover to stay on the cover.
+ */
+export async function gotoReader(page: Page): Promise<void> {
+  await gotoCover(page)
+  const cover = page.getByTestId('sutra-cover')
+  const { w } = await viewportSize(page)
+  const onCover =
+    (await cover.count()) > 0 && Math.abs((await cover.evaluate((el) => el.getBoundingClientRect().right)) - w) <= 1.5
+  if (onCover) {
+    await swipeToNextPage(page)
+    await expectPageAligned(page, 's1')
+  }
 }
 
 export const viewportSize = (page: Page) =>
@@ -177,12 +238,12 @@ export async function dragDown(page: Page, sheet: Locator, distance = 500): Prom
  * Touch swipe that reveals the next page: the finger moves towards the right, the rtl scroller moves
  * towards the left. A bit over half a window, with a pause before release so there is no fling.
  */
-export async function swipeToNextPage(page: Page): Promise<void> {
+export async function swipeToNextPage(page: Page, direction: 'next' | 'prev' = 'next'): Promise<void> {
   const { w, h } = await viewportSize(page)
   const cdp = await page.context().newCDPSession(page)
   const y = Math.round(h / 2)
-  const x0 = Math.round(w / 2 - w * 0.3)
-  const dx = Math.round(w * 0.6)
+  const x0 = Math.round(direction === 'next' ? w / 2 - w * 0.3 : w / 2 + w * 0.3)
+  const dx = Math.round(direction === 'next' ? w * 0.6 : -w * 0.6)
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: x0, y }] })
   for (let i = 1; i <= 12; i++) {
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x0 + (dx * i) / 12, y }] })
@@ -196,6 +257,17 @@ export async function swipeToNextPage(page: Page): Promise<void> {
 /** Right edge of a page relative to the window: ~innerWidth when the page is aligned to its start (rtl). */
 export async function pageRight(page: Page, seg: string): Promise<number> {
   return pageEl(page, seg).evaluate((el) => el.getBoundingClientRect().right)
+}
+
+/** Swipe back towards the head of the sutra (finger moves left, the rtl scroller moves right). */
+export const swipeToPrevPage = (page: Page): Promise<void> => swipeToNextPage(page, 'prev')
+
+/** The cover (REQ-RDR-030) is aligned when its right edge meets the window's right edge. */
+export async function expectCoverAligned(page: Page): Promise<void> {
+  const { w } = await viewportSize(page)
+  const right = () => page.getByTestId('sutra-cover').evaluate((el) => el.getBoundingClientRect().right)
+  await expect.poll(right, { timeout: 5000 }).toBeGreaterThanOrEqual(w - 1.5)
+  await expect.poll(right, { timeout: 5000 }).toBeLessThanOrEqual(w + 1.5)
 }
 
 export async function expectPageAligned(page: Page, seg: string): Promise<void> {

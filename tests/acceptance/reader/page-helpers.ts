@@ -95,6 +95,18 @@ export const PAGE_HELPERS_SRC = String.raw`
     return { left: b.left, top: b.top, right: b.right, bottom: b.bottom, width: b.width, height: b.height };
   };
 
+  // Extent of the glyphs inside an element (union of its text Range rects), not the element's box.
+  T.textExtent = (el) => {
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const rects = Array.from(range.getClientRects()).filter((r) => r.width > 0 || r.height > 0);
+    const left = Math.min(...rects.map((r) => r.left));
+    const top = Math.min(...rects.map((r) => r.top));
+    const right = Math.max(...rects.map((r) => r.right));
+    const bottom = Math.max(...rects.map((r) => r.bottom));
+    return { left, top, right, bottom, width: right - left, height: bottom - top };
+  };
+
   // ---- tokens --------------------------------------------------------------
   T.tokens = () => [...document.querySelectorAll(TOKEN_SEL)].map((el) => ({
     kind: el.dataset.testid,

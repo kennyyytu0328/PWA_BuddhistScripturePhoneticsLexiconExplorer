@@ -1,4 +1,4 @@
-import { BASE_LENGTH, LIGHT_TONE, cellLengths, zhuyinParts } from '../lib/rubyLayout'
+import { GLYPH_LENGTH, LIGHT_TONE, cellLengths, zhuyinParts } from '../lib/rubyLayout'
 import { isPunct } from '../lib/types'
 import type { PhoneticMode, Token as TokenData, WordToken } from '../lib/types'
 
@@ -27,9 +27,11 @@ function ZhuyinRt({ zy }: { zy: string }) {
 function Annotated({ token, mode }: { token: WordToken; mode: PhoneticMode }) {
   const lengths = cellLengths(token)
   // Padding (not a fixed-size box) keeps the characters in one text run, so vertical kerning still
-  // pulls 。，；！： up against the character before them (§8.2).
+  // pulls 。，；！： up against the character before them (§8.2). The cell carries the page's 0.5em
+  // letter-spacing as even padding instead (letter-spacing: 0 in index.css), so the glyph sits in the
+  // middle of its cell, where the centred `<rt>` is.
   const style = (i: number) => {
-    const pad = `${(lengths[i] - BASE_LENGTH) / 2}px`
+    const pad = `${(lengths[i] - GLYPH_LENGTH) / 2}px`
     return { paddingTop: pad, paddingBottom: pad }
   }
 
@@ -60,7 +62,7 @@ function Annotated({ token, mode }: { token: WordToken; mode: PhoneticMode }) {
 export function Token({ token, mode, active, onSelect }: Props) {
   if (isPunct(token)) {
     return (
-      <span data-testid="punct" lang="zh-Hans">
+      <span className="punct" data-testid="punct" lang="zh-Hans">
         {token.t}
       </span>
     )

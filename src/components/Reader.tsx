@@ -28,6 +28,7 @@ export function Reader({ data }: Props) {
     <>
       <div className="sutra-glow" data-testid="sutra-glow" aria-hidden="true" />
       <SutraViewport
+        title={data.ast.title}
         segments={data.ast.segments}
         mode={mode}
         activeKey={lexicon.activeKey}

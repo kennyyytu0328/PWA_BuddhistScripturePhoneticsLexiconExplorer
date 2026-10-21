@@ -4,12 +4,16 @@ import {
   closeTo,
   colorOf,
   expect,
+  expectCoverAligned,
   expectPageAligned,
+  gotoCover,
   gotoReader,
   pageEl,
   readPref,
   setMode,
   styleOf,
+  swipeToPrevPage,
+  swipeToNextPage,
   test,
   toggle,
   turnToPage,
@@ -81,9 +85,33 @@ test.describe('preferences and progress', () => {
     })
   }
 
-  test('[REQ-RDR-011] first use stops at the head of the sutra (page 1 aligned)', async ({ page }) => {
-    await gotoReader(page)
+  test('[REQ-RDR-011] first use stops on the cover (cover aligned, page 1 to its left)', async ({ page }) => {
+    await gotoCover(page)
+    await expectCoverAligned(page)
+    const { w } = await viewportSize(page)
+    const s1 = await pageEl(page, 's1').evaluate((el) => el.getBoundingClientRect().toJSON())
+    expect(s1.right, 'page 1 lies to the left of the window').toBeLessThanOrEqual(1)
+    expect(s1.right).toBeLessThan(w)
+  })
+
+  test('[REQ-RDR-011] reloading while on the cover stays on the cover', async ({ page }) => {
+    await gotoCover(page)
+    await expectCoverAligned(page)
+    await page.reload()
+    await expect(page.getByTestId('sutra-page')).toHaveCount(9)
+    await expectCoverAligned(page)
+  })
+
+  test('[REQ-RDR-011] turning to page 1 and back to the cover, then reloading, stays on the cover', async ({ page }) => {
+    await gotoCover(page)
+    await swipeToNextPage(page)
     await expectPageAligned(page, 's1')
+    await swipeToPrevPage(page)
+    await expectCoverAligned(page)
+    await expect.poll(() => readPref(page, 'progress'), { timeout: 5000 }).toEqual({ key: 'progress', value: 'cover' })
+    await page.reload()
+    await expect(page.getByTestId('sutra-page')).toHaveCount(9)
+    await expectCoverAligned(page)
   })
 
   test('[REQ-RDR-011] turning to page 4 stores progress s4 in IndexedDB and a reload returns to page 4', async ({ page }) => {

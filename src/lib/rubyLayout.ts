@@ -5,10 +5,13 @@ import type { WordToken } from './types'
 // fixed per-glyph rules instead of measuring the font at runtime: measuring depends on when the web font
 // finishes loading and would shift the text (CLS) once it does. The rules are deliberately a bit generous.
 
-/** Natural length of one scripture character: 20px glyph + 0.12em letter-spacing. */
-export const BASE_LENGTH = 22.4
+/** Scripture font size: one glyph is this long along the column. */
+export const GLYPH_LENGTH = 20
+/** Natural length of one scripture character: 20px glyph + 0.5em letter-spacing (Q-RDR-036). */
+export const BASE_LENGTH = 30
 const RT_SIZE = 10
-const GAP = 2
+/** An annotation is centred on its cell, so this much extra cell length keeps neighbouring `<rt>` 6px apart (Q-RDR-037). */
+export const RT_GAP = 6
 const WIDE_LATIN = /[mwMW]/
 const WIDE = 9.5
 const NORMAL = 6
@@ -34,12 +37,12 @@ export function zhuyinParts(zy: string): ZhuyinParts {
 
 export function zhuyinLength(zy: string): number {
   const { light, symbols } = zhuyinParts(zy)
-  return ((light ? 1 : 0) + [...symbols].length) * RT_SIZE + GAP
+  return ((light ? 1 : 0) + [...symbols].length) * RT_SIZE + RT_GAP
 }
 
 /** Sideways Latin text (pinyin, IAST): estimated advance of 10px Noto Sans. */
 export function latinLength(text: string): number {
-  return [...text].reduce((sum, ch) => sum + (WIDE_LATIN.test(ch) ? WIDE : NORMAL), 0) + GAP
+  return [...text].reduce((sum, ch) => sum + (WIDE_LATIN.test(ch) ? WIDE : NORMAL), 0) + RT_GAP
 }
 
 /** A name-term token is a touch target: its length along the column is at least this (REQ-RDR-005). */

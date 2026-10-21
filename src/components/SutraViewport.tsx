@@ -1,17 +1,22 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
+import { useCoverPeek } from '../hooks/useCoverPeek'
+import { COVER_PAGE } from '../lib/cover'
 import type { PhoneticMode, Segment } from '../lib/types'
+import { SutraCover } from './SutraCover'
 import { SutraPage } from './SutraPage'
 
 const SETTLE_MS = 120
 
 interface Props {
+  /** Sutra title shown on the cover. */
+  title: string
   segments: Segment[]
   mode: PhoneticMode
   activeKey: string | null
   onSelect: (key: string) => void
-  /** Segment to show on mount; null starts at the head of the sutra. */
+  /** Segment (or COVER_PAGE) to show on mount; null starts at the cover. */
   initialSegment?: string | null
-  /** Called with the segment id once scrolling has settled on a different page. */
+  /** Called with the segment id (or COVER_PAGE) once scrolling has settled on a different page. */
   onPageChange?: (segmentId: string) => void
   /** Opens the 白話參考 panel of a page. */
   onOpenVernacular?: (segment: Segment) => void
@@ -30,9 +35,18 @@ function currentSegment(container: HTMLElement): string | null {
   return nearest?.dataset.segment ?? null
 }
 
-export function SutraViewport({ segments, mode, activeKey, onSelect, initialSegment = null, onPageChange, onOpenVernacular }: Props) {
+export function SutraViewport({
+  title,
+  segments,
+  mode,
+  activeKey,
+  onSelect,
+  initialSegment = null,
+  onPageChange,
+  onOpenVernacular,
+}: Props) {
   const ref = useRef<HTMLElement>(null)
-  const lastSegment = useRef(initialSegment ?? segments[0]?.id ?? null)
+  const lastSegment = useRef(initialSegment ?? COVER_PAGE)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   // Restore the saved page once, on mount (empty deps on purpose): later prop changes must not scroll the reader.
@@ -42,6 +56,9 @@ export function SutraViewport({ segments, mode, activeKey, onSelect, initialSegm
   }, [])
 
   useEffect(() => () => clearTimeout(timer.current), [])
+
+  // A stored segment that no longer exists leaves the reader on the cover, so it counts as opening there.
+  useCoverPeek(ref, !segments.some((segment) => segment.id === initialSegment))
 
   const settle = () => {
     const id = currentSegment(ref.current!)
@@ -65,6 +82,7 @@ export function SutraViewport({ segments, mode, activeKey, onSelect, initialSegm
       onScroll={handleScroll}
       onScrollEnd={supportsScrollEnd() ? settle : undefined}
     >
+      <SutraCover title={title} />
       {segments.map((segment) => (
         <SutraPage key={segment.id} segment={segment} mode={mode} activeKey={activeKey} onSelect={onSelect}>
           <button

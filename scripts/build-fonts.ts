@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url'
 import * as fontkit from 'fontkit'
 import subsetFont from 'subset-font'
 import { z } from 'zod'
+import { COVER_SWIPE_HINT, COVER_TRANSLATOR } from '../src/lib/cover.ts'
 import { parseArgs, readJsonFile } from './lib/io.ts'
 import { openFont } from './lib/open-font.ts'
 import {
@@ -114,7 +115,8 @@ export async function collectPools(o: Required<FontBuildOptions>): Promise<CharP
   const lexicon = await readInput(o.lexicon, LexiconSchema)
   const tokens = ast.segments.flatMap((s) => s.tokens)
 
-  const sutra = codePointsOf(tokens.map((t) => t.t))
+  // The cover is the first fold drawn, so its text rides in the preloaded subset with the scripture.
+  const sutra = codePointsOf([...tokens.map((t) => t.t), ast.title ?? '', COVER_TRANSLATOR])
   const phonetics = codePointsOf(
     tokens.flatMap((t) => [...(t.chars ?? []).flatMap((c) => [c.py ?? '', c.zy ?? '']), t.iast ?? '']),
   )
@@ -133,7 +135,7 @@ export async function collectPools(o: Required<FontBuildOptions>): Promise<CharP
     ]),
   )
   const srcTexts = await Promise.all((await sourceFiles(o.src)).map((f) => readFile(f, 'utf8')))
-  const ui = union(codePointsOf([UI_STRINGS]), ...srcTexts.map(uiCodePointsFromSource))
+  const ui = union(codePointsOf([UI_STRINGS, COVER_SWIPE_HINT]), ...srcTexts.map(uiCodePointsFromSource))
   const ascii = codePointsOf([String.fromCharCode(...Array.from({ length: 95 }, (_, i) => 0x20 + i))])
   const missingGlyph = codePointsOf([MISSING_GLYPH])
 
