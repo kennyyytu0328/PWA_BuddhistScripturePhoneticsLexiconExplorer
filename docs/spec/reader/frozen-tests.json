@@ -19,7 +19,8 @@
     "tests/acceptance/reader/pill-scope.spec.ts": "a09d85a1a32e6e58f18748faa708ef616fdc9dacea899dfbe9387d24ee46991c",
     "tests/acceptance/reader/hit-area-square.spec.ts": "4136d53c8d37687b1adedd7b000dd1dead28062a40e96fb1924232f1e850ff0b",
     "tests/acceptance/reader/cover.spec.ts": "f8f8b7bd1f89b6f50b95d22899414ec698cd83ed8903707bea9c87140702fb63",
-    "tests/acceptance/reader/swipe-hint.spec.ts": "a775f9b77d3519ca1b6339d09dc4f43165bb68957a301d662ba2892f34b6afb4"
+    "tests/acceptance/reader/swipe-hint.spec.ts": "a775f9b77d3519ca1b6339d09dc4f43165bb68957a301d662ba2892f34b6afb4",
+    "tests/acceptance/reader/zhuyin-tone.spec.ts": "1e24625d6e3e9fa9544bdb6322ad5198009d0fa43ecd41821a115d3872b04cb6"
   },
-  "frozenAt": "2026-10-21T02:36:04.157Z"
+  "frozenAt": "2026-10-21T05:45:48.517Z"
 }

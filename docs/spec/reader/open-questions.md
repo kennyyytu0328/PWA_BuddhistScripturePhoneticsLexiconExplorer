@@ -397,3 +397,8 @@
   - B：提示也改為 stone-200。
   - 回覆：A（2026-10-21）。
 
+
+### Q-RDR-048 注音聲調符號在直排中被旋轉（使用者回報）
+- 關聯：REQ-RDR-008；`tests/acceptance/reader/zhuyin-tone.spec.ts`
+- 問題：使用者回報陽平與去聲顛倒。資料正確（菩 `ㄆㄨˊ`、薩 `ㄙㄚˋ`），原因在呈現：`<rt>` 為讓拼音、IAST 橫躺而設 `text-orientation: mixed`，直排時 ˊ ˋ ˇ 亦被順時針轉 90°，ˊ 看似 ˋ、ˋ 看似 ˊ、ˇ 看似 <。
+- 處理：注音 `<rt>`（`.rt-zhuyin`）改為 `text-orientation: upright`；拼音、IAST 維持 `mixed`。新增並凍結 zhuyin-tone.spec.ts（2026-10-21）。

@@ -284,6 +284,11 @@ rt {
   color: var(--rt-color);
 }
 
+/* `mixed` would turn the tone marks 90° clockwise, so ˊ reads as ˋ and ˋ as ˊ (Q-RDR-048). */
+.rt-zhuyin {
+  text-orientation: upright;
+}
+
 /* Taiwan convention: the tone mark stands right of the last symbol, the light-tone dot above the symbols. */
 .zy-symbols {
   position: relative;
