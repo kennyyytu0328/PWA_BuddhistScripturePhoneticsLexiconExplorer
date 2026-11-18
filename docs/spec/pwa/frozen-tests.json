@@ -8,7 +8,8 @@
     "tests/acceptance/pwa/offline.spec.ts": "79236cf649146a7c21b7059dbe639098a8758990043a3fd38483d0d555a6134c",
     "tests/acceptance/pwa/precache.spec.ts": "392d59623306bdc8b3aa17fd7200b397fe5f664e8708886245ca409b6f7c85dc",
     "tests/acceptance/pwa/runtime-cache.spec.ts": "53e8b7dab067e4f514f3975ea86b489dfcc4d1d3bbd1efe777a010a2ab8d589b",
-    "tests/acceptance/pwa/update.spec.ts": "057690ebc8f3f26e3a8fbe03226d43173469b58639750ffd275205995a164cc1"
+    "tests/acceptance/pwa/update.spec.ts": "057690ebc8f3f26e3a8fbe03226d43173469b58639750ffd275205995a164cc1",
+    "tests/acceptance/pwa/voice-precache.spec.ts": "d3a7c770b0c12fb433f6a0e79cce7336b15bed14a55336b3ca4b1724abd84220"
   },
-  "frozenAt": "2026-10-20T02:24:11.041Z"
+  "frozenAt": "2026-11-18T07:36:57.746Z"
 }
