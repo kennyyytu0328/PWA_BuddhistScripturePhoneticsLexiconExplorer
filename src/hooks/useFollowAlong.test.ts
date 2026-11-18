@@ -38,6 +38,19 @@ describe('useFollowAlong', () => {
     expect(result.current.cursor).toBe(5)
   })
 
+  it('a beat firing in the same batch as a pause does not desync the resume', () => {
+    const { result } = setup()
+    act(() => result.current.play(COVER_PAGE))
+    act(() => {
+      result.current.pause()
+      vi.advanceTimersByTime(ms(100, 0))
+    })
+    expect(result.current.cursor).toBe(0)
+    act(() => result.current.play('s1'))
+    act(() => void vi.advanceTimersByTime(beatMs(100) * 10))
+    expect(result.current.cursor).toBeGreaterThan(0)
+  })
+
   it('pause keeps the cursor and resumes from it', () => {
     const { result } = setup()
     act(() => result.current.play(COVER_PAGE))

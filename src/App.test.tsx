@@ -2,6 +2,7 @@ import 'fake-indexeddb/auto'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
+import * as db from './lib/db'
 import * as loader from './lib/loadData'
 
 beforeEach(() => {
@@ -77,10 +78,20 @@ describe('App', () => {
     expect(toggle.textContent).toBe('誦')
   })
 
-  it('renders nothing before the pace has loaded', () => {
+  it('renders nothing while only the pace is still loading', async () => {
     vi.spyOn(loader, 'loadReaderData').mockResolvedValue(data)
+    const real = db.readPref
+    let release: (value: string | null) => void = () => {}
+    const pending = new Promise<string | null>((resolve) => (release = resolve))
+    const spy = vi.spyOn(db, 'readPref').mockImplementation((key: string) => (key === 'followPace' ? pending : real(key)))
     const { container } = render(<App />)
+    // Data, phonetic mode and progress all resolve; only the pace stays pending.
+    await waitFor(() => expect(spy.mock.calls.map(([key]) => key)).toContain('progress'))
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(container.querySelector('[data-testid="sutra-page"]')).toBeNull()
     expect(container.querySelector('[data-testid="follow-toggle"]')).toBeNull()
+    release(null)
+    await screen.findByTestId('follow-toggle')
   })
 
   it('shows one failure line and a reload button, then recovers', async () => {

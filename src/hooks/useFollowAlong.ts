@@ -37,7 +37,6 @@ export function useFollowAlong(timeline: Timeline, pace: Pace) {
       if (index >= timeline.steps.length) return
       timer = setTimeout(() => {
         const next = index + 1
-        cursorRef.current = next < timeline.steps.length ? next : null
         // Only advance the state this timer was scheduled for; a queued pause()/play() wins over a late timer.
         setState((s) => {
           if (!s.playing || s.cursor !== index) return s

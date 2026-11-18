@@ -28,4 +28,6 @@ test('opening a term mid-turn pauses and the page still aligns', async ({ page }
   }
   expect(Math.abs((await pageRight(page, 's2')) - w)).toBeLessThanOrEqual(1.5)
   await expect(toggle).toHaveText('誦')
+  // Snapping is switched off only while the slide runs; no inline override may remain afterwards.
+  expect(await page.locator('[data-testid="sutra-viewport"]').evaluate((el) => (el as HTMLElement).style.scrollSnapType)).toBe('')
 })
