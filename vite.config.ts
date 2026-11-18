@@ -34,6 +34,9 @@ export default defineConfig({
           'data/heart-sutra.ast.json',
           'data/lexicon.dfb.json',
           'data/gaiji/*.png',
+          // the recording and its timings for 聲 (REQ-PWA-007, Q-PWA-011); ~530 KB, under Workbox's 2 MiB limit
+          'data/voice.mp3',
+          'data/voice-timings.json',
         ],
         // tier 3: future sutras / dictionaries under <base>data/ that are not precached (Q-PWA-002)
         runtimeCaching: [
