@@ -1,5 +1,4 @@
 import { memo } from 'react'
-import type { ReactNode } from 'react'
 import { isPunct } from '../lib/types'
 import type { PhoneticMode, Segment, Token as TokenData } from '../lib/types'
 import { Token } from './Token'
@@ -11,8 +10,8 @@ interface Props {
   onSelect: (key: string) => void
   /** Cursor inside this page (clamped upstream so far-away pages keep equal props); null = not following. */
   followAt: number | null
-  /** Slot for per-page controls (the 白話參考 button lands here). */
-  children?: ReactNode
+  /** Opens this page's 白話參考 panel; the button is rendered only when given. Keep it referentially stable. */
+  onOpenVernacular?: (segmentId: string) => void
 }
 
 interface Indexed {
@@ -38,7 +37,7 @@ function groupWithPunctuation(tokens: TokenData[]): Indexed[][] {
   }, [])
 }
 
-export const SutraPage = memo(function SutraPage({ segment, mode, activeKey, onSelect, followAt, children }: Props) {
+export const SutraPage = memo(function SutraPage({ segment, mode, activeKey, onSelect, followAt, onOpenVernacular }: Props) {
   return (
     <section className="sutra-page" data-testid="sutra-page" data-segment={segment.id}>
       <div className="sutra-text">
@@ -61,7 +60,16 @@ export const SutraPage = memo(function SutraPage({ segment, mode, activeKey, onS
           </span>
         ))}
       </div>
-      {children}
+      {onOpenVernacular && (
+        <button
+          type="button"
+          className="vernacular-toggle"
+          data-testid="vernacular-toggle"
+          onClick={() => onOpenVernacular(segment.id)}
+        >
+          白話參考
+        </button>
+      )}
     </section>
   )
 })

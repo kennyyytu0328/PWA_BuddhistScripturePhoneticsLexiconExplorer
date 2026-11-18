@@ -1,6 +1,7 @@
 import { useLayoutEffect } from 'react'
 import type { RefObject } from 'react'
 import { readPref, writePref } from '../lib/db'
+import { prefersReducedMotion, zenEasing } from '../lib/motion'
 
 const KEY = 'peek'
 const START_DELAY_MS = 500
@@ -11,12 +12,6 @@ const PEEK_PX = 40
  * Touches are caught on the document in the capture phase; `scroll` does not bubble, so it is caught on the folds.
  */
 const TOUCHES = ['touchstart', 'pointerdown', 'wheel'] as const
-
-const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
-
-// --ease-zen is set inline on <html> (index.html); the fallback keeps the nudge working without it.
-const zenEasing = () =>
-  getComputedStyle(document.documentElement).getPropertyValue('--ease-zen').trim() || 'cubic-bezier(0.19, 1, 0.22, 1)'
 
 /**
  * First-use nudge (REQ-RDR-031): the folds slide right by PEEK_PX to show the edge of page 1, then settle back.

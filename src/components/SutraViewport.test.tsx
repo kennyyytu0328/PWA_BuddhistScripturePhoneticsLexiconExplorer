@@ -4,7 +4,11 @@ import { act } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../lib/db'
 import type { Ast } from '../lib/types'
+import { buildTimeline } from '../lib/followAlong'
+import { turnToPage } from '../lib/pageTurn'
 import { SutraViewport } from './SutraViewport'
+
+vi.mock('../lib/pageTurn', () => ({ turnToPage: vi.fn(() => []) }))
 
 afterEach(() => {
   cleanup()
@@ -97,7 +101,7 @@ describe('SutraViewport', () => {
         expect(onPageChange).not.toHaveBeenCalled()
         act(() => vi.advanceTimersByTime(200))
         expect(onPageChange).toHaveBeenCalledOnce()
-        expect(onPageChange).toHaveBeenCalledWith('s2')
+        expect(onPageChange).toHaveBeenCalledWith('s2', 'user')
       })
 
       it('does not report when the page did not change', () => {
@@ -117,7 +121,7 @@ describe('SutraViewport', () => {
         mockRights({ cover: 400, s1: 0 })
         fireEvent.scroll(screen.getByTestId('sutra-viewport'))
         act(() => vi.advanceTimersByTime(200))
-        expect(onPageChange).toHaveBeenCalledWith('cover')
+        expect(onPageChange).toHaveBeenCalledWith('cover', 'user')
       })
     })
 
@@ -132,7 +136,7 @@ describe('SutraViewport', () => {
         expect(onPageChange).not.toHaveBeenCalled()
         fireEvent(viewport, new Event('scrollend'))
         expect(onPageChange).toHaveBeenCalledOnce()
-        expect(onPageChange).toHaveBeenCalledWith('s2')
+        expect(onPageChange).toHaveBeenCalledWith('s2', 'user')
       })
     })
 
@@ -170,6 +174,66 @@ describe('SutraViewport', () => {
       render(<SutraViewport title={ast.title} segments={ast.segments} mode="none" activeKey={null} onSelect={() => {}} initialSegment="s2" />)
       await sleep(700)
       expect(animate).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('follow along', () => {
+    const timeline = buildTimeline(ast.segments)
+    const props = { title: ast.title, segments: ast.segments, mode: 'none' as const, activeKey: null, onSelect: () => {} }
+    const markOf = (page: HTMLElement) => Array.from(page.querySelectorAll('[data-follow]')).map((e) => e.getAttribute('data-follow'))
+
+    it('marks pages from the cursor: read before, one current, ahead after', () => {
+      render(<SutraViewport {...props} follow={{ timeline, cursor: timeline.startOf.s2 }} />)
+      const [p1, p2] = screen.getAllByTestId('sutra-page')
+      expect(new Set(markOf(p1))).toEqual(new Set(['read']))
+      expect(markOf(p2).filter((m) => m === 'current')).toHaveLength(1)
+    })
+
+    describe('page turn', () => {
+      beforeEach(() => {
+        vi.mocked(turnToPage).mockClear()
+        Reflect.deleteProperty(window, 'onscrollend')
+        vi.useFakeTimers()
+      })
+      afterEach(() => vi.useRealTimers())
+
+      const rect = (right: number) => ({ right }) as DOMRect
+      const atS2 = () =>
+        vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+          return rect(this.dataset.segment ? (this.dataset.segment === 's2' ? 400 : 800) : 400)
+        })
+
+      it('turns once when followSegment moves to another page, and the landing is reported as auto', () => {
+        const onPageChange = vi.fn()
+        const { rerender } = render(<SutraViewport {...props} followSegment="s1" onPageChange={onPageChange} />)
+        expect(turnToPage).not.toHaveBeenCalled()
+        rerender(<SutraViewport {...props} followSegment="s2" onPageChange={onPageChange} />)
+        expect(turnToPage).toHaveBeenCalledOnce()
+        expect(vi.mocked(turnToPage).mock.calls[0][1]).toBe(screen.getAllByTestId('sutra-page')[1])
+        atS2()
+        fireEvent.scroll(screen.getByTestId('sutra-viewport'))
+        act(() => vi.advanceTimersByTime(200))
+        expect(onPageChange).toHaveBeenCalledWith('s2', 'auto')
+      })
+
+      it('cancels the animations of the previous turn before starting a new one', () => {
+        const cancel = vi.fn()
+        vi.mocked(turnToPage).mockReturnValueOnce([{ cancel } as unknown as Animation])
+        const { rerender } = render(<SutraViewport {...props} followSegment="s1" />)
+        rerender(<SutraViewport {...props} followSegment="s2" />)
+        rerender(<SutraViewport {...props} followSegment={null} />)
+        rerender(<SutraViewport {...props} followSegment="s1" />)
+        expect(cancel).toHaveBeenCalled()
+      })
+
+      it('reports a settle with no followSegment change as user', () => {
+        const onPageChange = vi.fn()
+        render(<SutraViewport {...props} followSegment="s1" onPageChange={onPageChange} />)
+        atS2()
+        fireEvent.scroll(screen.getByTestId('sutra-viewport'))
+        act(() => vi.advanceTimersByTime(200))
+        expect(onPageChange).toHaveBeenCalledWith('s2', 'user')
+      })
     })
   })
 })
