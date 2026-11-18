@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, type TouchEvent } from 'react'
 import { useCoverPeek } from '../hooks/useCoverPeek'
 import { COVER_PAGE } from '../lib/cover'
 import { localCursor, type Timeline } from '../lib/followAlong'
-import { turnToPage } from '../lib/pageTurn'
+import { columnOffset, slideBy, translateX, turnToPage } from '../lib/pageTurn'
 import type { PhoneticMode, Segment } from '../lib/types'
 import { SutraCover } from './SutraCover'
 import { SutraPage } from './SutraPage'
@@ -35,23 +35,25 @@ const supportsScrollEnd = () => 'onscrollend' in window
 
 const pagesOf =(container: HTMLElement) => Array.from(container.children) as HTMLElement[]
 
-/** Horizontal offset of a transform (computed `matrix(...)` or a plain `translateX(...)`); 0 for none. */
-function translateX(el: HTMLElement): number {
-  const transform = getComputedStyle(el).transform
-  const matrix = /^matrix(?:3d)?\(([^)]*)\)$/.exec(transform)
-  if (matrix) {
-    const values = matrix[1].split(',').map(Number)
-    return (values.length === 6 ? values[4] : values[12]) || 0
-  }
-  return Number.parseFloat(/translateX\(([-\d.]+)px\)/.exec(transform)?.[1] ?? '') || 0
-}
-
-// The container is rtl, so a page is "current" when its right edge sits closest to the container's.
+// The page holding the container's horizontal middle is "current", so a page wider than the window counts as long as
+// it covers the window (Q-RDR-054); failing that (rtl), the page whose right edge sits closest to the container's.
 // Transforms (the page-turn slide) are subtracted: the page counts where layout and scroll put it.
 function currentSegment(container: HTMLElement): string | null {
-  const right = container.getBoundingClientRect().right
-  const layoutRight = (page: HTMLElement) => page.getBoundingClientRect().right - translateX(page)
-  const [nearest] = pagesOf(container).sort((a, b) => Math.abs(layoutRight(a) - right) - Math.abs(layoutRight(b) - right))
+  const view = container.getBoundingClientRect()
+  const middle = (view.left + view.right) / 2
+  const layout = (page: HTMLElement) => {
+    const r = page.getBoundingClientRect()
+    const t = translateX(page)
+    return { left: r.left - t, right: r.right - t }
+  }
+  const pages = pagesOf(container)
+  const holding = pages.find((page) => {
+    const { left, right } = layout(page)
+    return left <= middle && middle < right
+  })
+  const [nearest] = holding
+    ? [holding]
+    : pages.sort((a, b) => Math.abs(layout(a).right - view.right) - Math.abs(layout(b).right - view.right))
   return nearest?.dataset.segment ?? null
 }
 
@@ -72,6 +74,8 @@ export function SutraViewport({
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const turning = useRef<Animation[]>([])
   const previousFollow = useRef(followSegment)
+  // The reader's own gesture: a finger is down, or a touch scrolled the fold and that scroll has not settled since it lifted.
+  const gesture = useRef({ down: false, moved: false })
 
   // Latest callbacks behind stable wrappers, so memoised pages are not re-rendered by a parent's new closures.
   const latest = useRef({ onSelect, onOpenVernacular, segments })
@@ -102,6 +106,8 @@ export function SutraViewport({
   useCoverPeek(ref, !segments.some((segment) => segment.id === initialSegment))
 
   const settle = () => {
+    // A finger held still mid-swipe can settle the scroll; the gesture still lasts until it lifts.
+    if (!gesture.current.down) gesture.current = { down: false, moved: false }
     const id = currentSegment(ref.current!)
     const auto = id === followSegment
     if (!id || id === lastSegment.current) return
@@ -111,7 +117,23 @@ export function SutraViewport({
 
   // scrollend fires once the snap has finished; without it, a pause of SETTLE_MS stands in for the snap.
   const handleScroll = () => {
+    if (gesture.current.down) gesture.current = { down: true, moved: true }
+    clearTimeout(timer.current)
     if (supportsScrollEnd()) return
+    timer.current = setTimeout(settle, SETTLE_MS)
+  }
+
+  // A new touch keeps `moved`: a tap during the snap of a lifted swipe must not end that swipe's gesture.
+  const handleTouchStart = () => {
+    gesture.current = { ...gesture.current, down: true }
+  }
+  // The gesture ends when the last finger lifts. A swipe lifted with nothing left to scroll gets no further scroll
+  // event, so a settle is scheduled here; any scroll that follows (the snap) clears it and settles by its own
+  // scrollend or timer.
+  const handleTouchEnd = (event: TouchEvent<HTMLElement>) => {
+    const down = event.touches.length > 0
+    gesture.current = { ...gesture.current, down }
+    if (down || !gesture.current.moved) return
     clearTimeout(timer.current)
     timer.current = setTimeout(settle, SETTLE_MS)
   }
@@ -133,12 +155,30 @@ export function SutraViewport({
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [followSegment])
 
+  // On a page wider than the window, a cursor reaching a column outside it slides that column into view (Q-RDR-054).
+  // Runs after the turn effect above, so a turn has already landed the new page; never fights the reader's own swipe.
+  const cursor = follow?.cursor ?? null
+  useEffect(() => {
+    if (gesture.current.down || gesture.current.moved) return
+    if (!followSegment || followSegment !== lastSegment.current || cursor === null) return
+    const page = pagesOf(ref.current!).find((p) => p.dataset.segment === followSegment)
+    const cell = page?.querySelector<HTMLElement>('[data-follow="current"]')
+    if (!page || !cell) return
+    const offset = columnOffset(ref.current!, page, cell)
+    if (offset === 0) return
+    turning.current.forEach((a) => a.cancel())
+    turning.current = slideBy(ref.current!, page, offset)
+  }, [cursor, followSegment])
+
   return (
     <main
       className="sutra-viewport"
       data-testid="sutra-viewport"
       ref={ref}
       onScroll={handleScroll}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
       onScrollEnd={supportsScrollEnd() ? settle : undefined}
     >
       <SutraCover title={title} />

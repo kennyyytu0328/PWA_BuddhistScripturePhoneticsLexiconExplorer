@@ -5,10 +5,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../lib/db'
 import type { Ast } from '../lib/types'
 import { buildTimeline } from '../lib/followAlong'
-import { turnToPage } from '../lib/pageTurn'
+import { columnOffset, slideBy, turnToPage } from '../lib/pageTurn'
 import { SutraViewport } from './SutraViewport'
 
-vi.mock('../lib/pageTurn', () => ({ turnToPage: vi.fn(() => []) }))
+vi.mock('../lib/pageTurn', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../lib/pageTurn')>()),
+  turnToPage: vi.fn(() => []),
+  columnOffset: vi.fn(() => 0),
+  slideBy: vi.fn(() => []),
+}))
 
 afterEach(() => {
   cleanup()
@@ -77,7 +82,8 @@ describe('SutraViewport', () => {
     beforeEach(() => vi.useFakeTimers())
     afterEach(() => vi.useRealTimers())
 
-    const rect = (right: number) => ({ right }) as DOMRect
+    // a window-wide fold (or the 400px window itself) ending at `right`
+    const rect = (right: number) => ({ left: right - 400, right }) as DOMRect
 
     function mockRights(rights: Record<string, number>) {
       vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
@@ -122,6 +128,22 @@ describe('SutraViewport', () => {
         fireEvent.scroll(screen.getByTestId('sutra-viewport'))
         act(() => vi.advanceTimersByTime(200))
         expect(onPageChange).toHaveBeenCalledWith('cover', 'user')
+      })
+
+      it('a page wider than twice the window, scrolled to its last column, is still the page in view', () => {
+        const onPageChange = vi.fn()
+        render(
+          <SutraViewport title={ast.title} segments={ast.segments} mode="none" activeKey={null} onSelect={() => {}} initialSegment="s1" onPageChange={onPageChange} />,
+        )
+        // Window 0..400; s1 spans 0..900 (its right edge is 500px away), s2 ends at 0 (its right edge 400px away).
+        const spans: Record<string, [number, number]> = { cover: [900, 1300], s1: [0, 900], s2: [-400, 0] }
+        vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+          const [left, right] = this.dataset.segment ? spans[this.dataset.segment] : [0, 400]
+          return { left, right } as DOMRect
+        })
+        fireEvent.scroll(screen.getByTestId('sutra-viewport'))
+        act(() => vi.advanceTimersByTime(200))
+        expect(onPageChange).not.toHaveBeenCalled()
       })
     })
 
@@ -189,6 +211,156 @@ describe('SutraViewport', () => {
       expect(markOf(p2).filter((m) => m === 'current')).toHaveLength(1)
     })
 
+    describe('columns outside the window', () => {
+      beforeEach(() => {
+        vi.mocked(columnOffset).mockReset().mockReturnValue(0)
+        vi.mocked(slideBy).mockReset().mockReturnValue([])
+      })
+      const at = timeline.startOf.s1 + 1
+
+      it('slides the fold by the offset of the cursor cell while playing on the cursor page', () => {
+        vi.mocked(columnOffset).mockReturnValue(120)
+        render(<SutraViewport {...props} initialSegment="s1" follow={{ timeline, cursor: at }} followSegment="s1" />)
+        const page = screen.getAllByTestId('sutra-page')[0]
+        expect(columnOffset).toHaveBeenCalled()
+        const [container, measuredPage, cell] = vi.mocked(columnOffset).mock.calls[0]
+        expect(container).toBe(screen.getByTestId('sutra-viewport'))
+        expect(measuredPage).toBe(page)
+        expect(cell.getAttribute('data-follow')).toBe('current')
+        expect(slideBy).toHaveBeenCalledWith(screen.getByTestId('sutra-viewport'), page, 120)
+      })
+
+      it('does not slide while the cursor cell is in view', () => {
+        render(<SutraViewport {...props} initialSegment="s1" follow={{ timeline, cursor: at }} followSegment="s1" />)
+        expect(columnOffset).toHaveBeenCalled()
+        expect(slideBy).not.toHaveBeenCalled()
+      })
+
+      it('does not follow columns while paused', () => {
+        vi.mocked(columnOffset).mockReturnValue(120)
+        render(<SutraViewport {...props} initialSegment="s1" follow={{ timeline, cursor: at }} followSegment={null} />)
+        expect(slideBy).not.toHaveBeenCalled()
+      })
+
+      it('cancels a running slide before starting the next one', () => {
+        const cancel = vi.fn()
+        vi.mocked(columnOffset).mockReturnValue(120)
+        vi.mocked(slideBy).mockReturnValueOnce([{ cancel } as unknown as Animation])
+        const { rerender } = render(<SutraViewport {...props} initialSegment="s1" follow={{ timeline, cursor: at - 1 }} followSegment="s1" />)
+        rerender(<SutraViewport {...props} initialSegment="s1" follow={{ timeline, cursor: at }} followSegment="s1" />)
+        expect(cancel).toHaveBeenCalled()
+        expect(slideBy).toHaveBeenCalledTimes(2)
+      })
+
+      describe('while the reader touches the fold', () => {
+        beforeEach(() => {
+          Reflect.deleteProperty(window, 'onscrollend')
+          vi.useFakeTimers()
+        })
+        afterEach(() => vi.useRealTimers())
+
+        const view = (cursor: number) => (
+          <SutraViewport {...props} initialSegment="s1" follow={{ timeline, cursor }} followSegment="s1" />
+        )
+        // The window and s1 at 0..400, every other fold far off-screen: swipes settle back on the cursor page.
+        const onS1 = () =>
+          vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+            const onScreen = !this.dataset.segment || this.dataset.segment === 's1'
+            return { left: onScreen ? 0 : -10_000, right: onScreen ? 400 : -9_600 } as DOMRect
+          })
+        // s1 of the fixture has two characters, at - 1 and at; stepping between them re-runs the follow effect.
+        const swipeStarted = () => {
+          const rendered = render(view(at - 1))
+          onS1()
+          vi.mocked(columnOffset).mockReturnValue(120)
+          const viewport = screen.getByTestId('sutra-viewport')
+          fireEvent.touchStart(viewport)
+          fireEvent.scroll(viewport)
+          return { ...rendered, viewport }
+        }
+
+        it('does not slide during a swipe, and follows again once the swipe has settled', () => {
+          const { rerender, viewport } = swipeStarted()
+          rerender(view(at))
+          fireEvent.touchEnd(viewport)
+          rerender(view(at - 1))
+          expect(slideBy).not.toHaveBeenCalled()
+          act(() => vi.advanceTimersByTime(200))
+          rerender(view(at))
+          expect(slideBy).toHaveBeenCalledOnce()
+        })
+
+        it('a finger held still mid-swipe keeps the gesture until it lifts, even when the scroll settles meanwhile', () => {
+          const { rerender, viewport } = swipeStarted()
+          act(() => vi.advanceTimersByTime(200))
+          rerender(view(at))
+          expect(slideBy).not.toHaveBeenCalled()
+          fireEvent.touchEnd(viewport)
+          act(() => vi.advanceTimersByTime(200))
+          rerender(view(at - 1))
+          expect(slideBy).toHaveBeenCalledOnce()
+        })
+
+        it('a tap during the snap of a lifted swipe keeps the gesture until the snap settles', () => {
+          const { rerender, viewport } = swipeStarted()
+          fireEvent.touchEnd(viewport)
+          fireEvent.touchStart(viewport)
+          fireEvent.touchEnd(viewport)
+          rerender(view(at))
+          expect(slideBy).not.toHaveBeenCalled()
+          act(() => vi.advanceTimersByTime(200))
+          rerender(view(at - 1))
+          expect(slideBy).toHaveBeenCalledOnce()
+        })
+
+        it('a second finger lifting mid-swipe keeps the gesture while the first is still down', () => {
+          const { rerender, viewport } = swipeStarted()
+          fireEvent.touchStart(viewport)
+          fireEvent.touchEnd(viewport, { touches: [{ identifier: 0, clientX: 100, clientY: 100 }] })
+          fireEvent.scroll(viewport)
+          act(() => vi.advanceTimersByTime(200))
+          rerender(view(at))
+          expect(slideBy).not.toHaveBeenCalled()
+        })
+
+        it('a cancelled touch ends the gesture like a lifted one', () => {
+          const { rerender, viewport } = swipeStarted()
+          fireEvent.touchCancel(viewport)
+          act(() => vi.advanceTimersByTime(200))
+          rerender(view(at))
+          expect(slideBy).toHaveBeenCalledOnce()
+        })
+
+        it('with scrollend, the gesture ends at the scrollend after the finger lifts', () => {
+          Object.defineProperty(window, 'onscrollend', { configurable: true, writable: true, value: null })
+          try {
+            const { rerender, viewport } = swipeStarted()
+            fireEvent.touchEnd(viewport)
+            // the snap after the lift scrolls on: the lift's fallback settle must not end the gesture mid-snap
+            fireEvent.scroll(viewport)
+            act(() => vi.advanceTimersByTime(200))
+            rerender(view(at))
+            expect(slideBy).not.toHaveBeenCalled()
+            fireEvent(viewport, new Event('scrollend'))
+            rerender(view(at - 1))
+            expect(slideBy).toHaveBeenCalledOnce()
+          } finally {
+            Reflect.deleteProperty(window, 'onscrollend')
+          }
+        })
+
+        it('a tap (touch without scrolling) does not stop the following', () => {
+          const { rerender } = render(view(at - 1))
+          vi.mocked(columnOffset).mockReturnValue(120)
+          const viewport = screen.getByTestId('sutra-viewport')
+          fireEvent.touchStart(viewport)
+          fireEvent.touchEnd(viewport)
+          rerender(view(at))
+          expect(slideBy).toHaveBeenCalledOnce()
+        })
+      })
+    })
+
     describe('page turn', () => {
       beforeEach(() => {
         vi.mocked(turnToPage).mockClear()
@@ -197,7 +369,8 @@ describe('SutraViewport', () => {
       })
       afterEach(() => vi.useRealTimers())
 
-      const rect = (right: number) => ({ right }) as DOMRect
+      // a window-wide fold (or the 400px window itself) ending at `right`
+      const rect = (right: number) => ({ left: right - 400, right }) as DOMRect
       const atS2 = () =>
         vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
           return rect(this.dataset.segment ? (this.dataset.segment === 's2' ? 400 : 800) : 400)
