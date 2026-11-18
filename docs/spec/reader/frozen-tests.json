@@ -1,6 +1,6 @@
 {
   "files": {
-    "tests/acceptance/reader/device.spec.ts": "d5090c51a1b3145605aef4c4700f30ab8a889e20d46053279591c22501dd080a",
+    "tests/acceptance/reader/device.spec.ts": "a8d0ca34ae3244d94d07341a7b86e1fde18d98c6926afcd8b937ddf5115650eb",
     "tests/acceptance/reader/fonts.spec.ts": "eca4217c7cf768bb520c92de4365d412dcd06f65f2271e53e46081d826f35d5e",
     "tests/acceptance/reader/helpers.ts": "f375fb99f6ff9bb4398db43a3ba6eb99985f5a927c2b11d46839f108116fa886",
     "tests/acceptance/reader/layout.spec.ts": "3b06c66bbfc45252c9a5e0176ca6348d633f0db386d1491e5812994f634209e6",
@@ -20,7 +20,8 @@
     "tests/acceptance/reader/hit-area-square.spec.ts": "4136d53c8d37687b1adedd7b000dd1dead28062a40e96fb1924232f1e850ff0b",
     "tests/acceptance/reader/cover.spec.ts": "f8f8b7bd1f89b6f50b95d22899414ec698cd83ed8903707bea9c87140702fb63",
     "tests/acceptance/reader/swipe-hint.spec.ts": "a775f9b77d3519ca1b6339d09dc4f43165bb68957a301d662ba2892f34b6afb4",
-    "tests/acceptance/reader/zhuyin-tone.spec.ts": "1e24625d6e3e9fa9544bdb6322ad5198009d0fa43ecd41821a115d3872b04cb6"
+    "tests/acceptance/reader/zhuyin-tone.spec.ts": "1e24625d6e3e9fa9544bdb6322ad5198009d0fa43ecd41821a115d3872b04cb6",
+    "tests/acceptance/reader/follow-along.spec.ts": "9d7e87d6dc22eb4f4201fa0636385be8ea73e41a438f2ce64f829ee2e4b8653f"
   },
-  "frozenAt": "2026-10-21T05:45:48.517Z"
+  "frozenAt": "2026-11-18T00:58:12.845Z"
 }
