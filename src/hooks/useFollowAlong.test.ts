@@ -30,6 +30,14 @@ describe('useFollowAlong', () => {
     expect(result.current.cursor).toBe(1)
   })
 
+  it('one long jump of time advances through every beat that elapsed', () => {
+    const { result } = setup()
+    act(() => result.current.play(COVER_PAGE))
+    const total = [0, 1, 2, 3, 4].reduce((sum, i) => sum + ms(100, i), 0)
+    act(() => void vi.advanceTimersByTime(total))
+    expect(result.current.cursor).toBe(5)
+  })
+
   it('pause keeps the cursor and resumes from it', () => {
     const { result } = setup()
     act(() => result.current.play(COVER_PAGE))

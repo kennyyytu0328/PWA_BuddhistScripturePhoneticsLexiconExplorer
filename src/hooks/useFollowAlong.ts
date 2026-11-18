@@ -23,18 +23,32 @@ export function useFollowAlong(timeline: Timeline, pace: Pace) {
   // A shorter timeline arrived while the cursor was past its end: go idle (adjusting state during render).
   if (cursor !== null && cursor >= timeline.steps.length) setState(IDLE)
 
+  // The beats chain themselves from the timer callback instead of waiting for a render per beat, so a long
+  // stretch of elapsed time (a throttled tab, a fake clock jumping ahead) still moves the cursor the right distance.
+  const cursorRef = useRef(cursor)
   useEffect(() => {
-    if (cursor === null) return
-    if (!playing || cursor >= timeline.steps.length) return
-    const timer = setTimeout(() => {
-      // Only advance the state this timer was scheduled for; a queued pause()/play() wins over a late timer.
-      setState((s) => {
-        if (!s.playing || s.cursor !== cursor) return s
-        return cursor + 1 < timeline.steps.length ? { cursor: cursor + 1, playing: true } : IDLE
-      })
-    }, beatMs(paceRef.current) * timeline.steps[cursor].beats)
+    cursorRef.current = cursor
+  }, [cursor])
+
+  useEffect(() => {
+    if (!playing || cursorRef.current === null) return
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const schedule = (index: number) => {
+      if (index >= timeline.steps.length) return
+      timer = setTimeout(() => {
+        const next = index + 1
+        cursorRef.current = next < timeline.steps.length ? next : null
+        // Only advance the state this timer was scheduled for; a queued pause()/play() wins over a late timer.
+        setState((s) => {
+          if (!s.playing || s.cursor !== index) return s
+          return next < timeline.steps.length ? { cursor: next, playing: true } : IDLE
+        })
+        if (next < timeline.steps.length) schedule(next)
+      }, beatMs(paceRef.current) * timeline.steps[index].beats)
+    }
+    schedule(cursorRef.current)
     return () => clearTimeout(timer)
-  }, [playing, cursor, timeline])
+  }, [playing, timeline])
 
   const play = useCallback(
     (visible: string) =>

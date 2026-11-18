@@ -43,6 +43,20 @@ describe('turnToPage', () => {
     expect(keyframes[0].easing).toBe('cubic-bezier(0.19, 1, 0.22, 1)')
   })
 
+  it('turns snapping off for the slide and back on when the newest turn ends', async () => {
+    let finish: () => void = () => {}
+    const finished = new Promise<void>((resolve) => (finish = resolve))
+    animate.mockImplementation(() => ({ cancel: () => {}, finished }) as unknown as Animation)
+    container.style.scrollSnapType = ''
+    turnToPage(container, target)
+    expect(container.style.scrollSnapType).toBe('none')
+    finish()
+    await finished
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(container.style.scrollSnapType).toBe('')
+  })
+
   it('only scrolls, without animating, under prefers-reduced-motion', () => {
     setMotion(true)
     expect(turnToPage(container, target)).toEqual([])

@@ -1,9 +1,15 @@
-import { useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+import { useFollowAlong } from '../hooks/useFollowAlong'
+import { useFollowPace } from '../hooks/useFollowPace'
+import { COVER_PAGE } from '../lib/cover'
+import { buildTimeline, DEFAULT_PACE } from '../lib/followAlong'
 import { usePhoneticMode } from '../hooks/usePhoneticMode'
 import { useReadingProgress } from '../hooks/useReadingProgress'
 import { useLexiconSelection } from '../hooks/useLexiconSelection'
 import { useWakeLock } from '../hooks/useWakeLock'
 import type { ReaderData, Segment } from '../lib/types'
+import { FollowControls } from './FollowControls'
+import { FollowProgress } from './FollowProgress'
 import { LexiconDrawer } from './LexiconDrawer'
 import { PhoneticToggle } from './PhoneticToggle'
 import { SutraViewport } from './SutraViewport'
@@ -18,26 +24,69 @@ export function Reader({ data }: Props) {
   const { mode, cycle } = usePhoneticMode()
   const progress = useReadingProgress()
   const lexicon = useLexiconSelection(data)
+  const { pace, cycle: cyclePace } = useFollowPace()
+  const segments = data.ast.segments
+  const timeline = useMemo(() => buildTimeline(segments), [segments])
+  const { cursor, playing, play, pause } = useFollowAlong(timeline, pace ?? DEFAULT_PACE)
+  const [visible, setVisible] = useState<string | null>(null)
   // The segment stays set after closing so the panel content survives the slide-out animation.
   const [vernacular, setVernacular] = useState<{ segment: Segment; open: boolean } | null>(null)
 
-  // Stay bare until the stored mode and page are known, so nothing is drawn and then moved.
-  if (mode === null || !progress.loaded) return null
+  const cursorSegment = cursor !== null ? timeline.steps[cursor].segmentId : null
+  const follow = useMemo(() => (cursor !== null ? { timeline, cursor } : null), [timeline, cursor])
+  const { save } = progress
+  const onPageChange = useCallback(
+    (id: string, source: 'user' | 'auto') => {
+      save(id)
+      setVisible(id)
+      if (source === 'user' && playing && id !== cursorSegment) pause()
+    },
+    [save, playing, cursorSegment, pause],
+  )
+  const { select } = lexicon
+  const onSelect = useCallback(
+    (key: string) => {
+      pause()
+      select(key)
+    },
+    [pause, select],
+  )
+  const onOpenVernacular = useCallback(
+    (segment: Segment) => {
+      pause()
+      setVernacular({ segment, open: true })
+    },
+    [pause],
+  )
+
+  // Stay bare until the stored mode, page and pace are known, so nothing is drawn and then moved.
+  if (mode === null || pace === null || !progress.loaded) return null
+  const restored = segments.some((s) => s.id === progress.initial) ? progress.initial : null
+  const current = visible ?? restored ?? COVER_PAGE
 
   return (
     <>
       <div className="sutra-glow" data-testid="sutra-glow" aria-hidden="true" />
       <SutraViewport
         title={data.ast.title}
-        segments={data.ast.segments}
+        segments={segments}
         mode={mode}
         activeKey={lexicon.activeKey}
-        onSelect={lexicon.select}
+        onSelect={onSelect}
         initialSegment={progress.initial}
-        onPageChange={progress.save}
-        onOpenVernacular={(segment) => setVernacular({ segment, open: true })}
+        onPageChange={onPageChange}
+        onOpenVernacular={onOpenVernacular}
+        follow={follow}
+        followSegment={playing ? cursorSegment : null}
       />
       <PhoneticToggle mode={mode} onCycle={cycle} />
+      <FollowControls
+        playing={playing}
+        pace={pace}
+        onToggle={() => (playing ? pause() : play(current))}
+        onCyclePace={cyclePace}
+      />
+      {cursor !== null ? <FollowProgress fraction={(cursor + 1) / timeline.steps.length} /> : null}
       {vernacular ? (
         <VernacularPanel
           open={vernacular.open}
