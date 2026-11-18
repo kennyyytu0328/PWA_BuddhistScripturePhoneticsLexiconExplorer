@@ -1,5 +1,5 @@
 # 需求登錄表 — reader 單元
-> 狀態：已確認（2026-10-17，使用者確認；Q-RDR-001～015、017～032 採 A，016 採 B，皆已併入；REQ-RDR-029 於 2026-10-19 依 Q-RDR-018 新增；2026-10-20 實機試看後依 Q-RDR-036～038 修改 REQ-RDR-002、003、008、011，新增 REQ-RDR-030；2026-10-21 依 Q-RDR-042 新增 REQ-RDR-031；2026-11-17 依 Q-RDR-049 新增 REQ-RDR-032～037，修改 REQ-RDR-020、021；2026-11-18 依 Q-RDR-051 修改 REQ-RDR-032）。
+> 狀態：已確認（2026-10-17，使用者確認；Q-RDR-001～015、017～032 採 A，016 採 B，皆已併入；REQ-RDR-029 於 2026-10-19 依 Q-RDR-018 新增；2026-10-20 實機試看後依 Q-RDR-036～038 修改 REQ-RDR-002、003、008、011，新增 REQ-RDR-030；2026-10-21 依 Q-RDR-042 新增 REQ-RDR-031；2026-11-17 依 Q-RDR-049 新增 REQ-RDR-032～037，修改 REQ-RDR-020、021；2026-11-18 依 Q-RDR-051 修改 REQ-RDR-032；同日依 Q-RDR-053 調快速度）。
 > 來源：`CLAUDE.md`（行號依 2026-10-17 版本，commit 2279ebe）；依賴單元 `data`：產物格式見 `docs/spec/data/requirements.md` 的 REQ-DAT-002（AST）、003（辭典）、004（授權）、011／012（釋義與造字）、016（IAST）、019（無 lex 不可點擊）。
 > 範圍：§1 核心體驗、§4-2（UI 部分）、§6、§7、§8.2、8.4、8.5、8.6。PWA 安裝與離線（§5、§8.3）屬後續 `pwa` 單元。
 
@@ -389,10 +389,10 @@
   - And 兩者皆為 44×44px、`border-radius` 為 full（≥ 22px）、背景 stone-900 80% 不透明並有 backdrop blur、邊框同音標膠囊；文字為 Noto Sans TC、字重 300–400
   - And 360×640 與 Pixel 7 下，兩鍵不與 `phonetic-toggle`、`vernacular-toggle`、`swipe-hint` 重疊
   - And `follow-toggle` 未播放時文字「誦」、`aria-pressed="false"`、`aria-label="開始隨誦"`；播放中文字「停」、`aria-pressed="true"`、`aria-label="暫停隨誦"`
-  - And `follow-pace` 文字「慢」「中」「快」分別對應每分鐘 60、100、150 字，`aria-label` 為「隨誦速度：每分鐘 N 字」（N 為 60／100／150）
+  - And `follow-pace` 文字「慢」「中」「快」分別對應每分鐘 150、225、300 字，`aria-label` 為「隨誦速度：每分鐘 N 字」（N 為 150／225／300；2026-11-18 依 Q-RDR-053 修改）
   - When 連續點擊 `follow-pace`
   - Then 速度依 中 → 快 → 慢 → 中 輪替
-  - And 選擇存於 IndexedDB `sutraflow/prefs` 鍵 `followPace`，值為字串 `"60"`／`"100"`／`"150"`；重新載入後還原；無紀錄或值無效時為 100（中）
+  - And 選擇存於 IndexedDB `sutraflow/prefs` 鍵 `followPace`，值為字串 `"150"`／`"225"`／`"300"`；重新載入後還原；無紀錄或值無效（含舊版的 `"60"`、`"100"`）時為 225（中）
   - When 播放中改變速度
   - Then 自下一字起以新速度前進：光標所在字剩餘的拍數沿用原速度（2026-11-18 依 Q-RDR-051 修改）
 - 狀態：確認
