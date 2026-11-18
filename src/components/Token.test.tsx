@@ -113,4 +113,15 @@ describe('Token', () => {
     expect(container.querySelector('.zy-light')?.textContent).toBe('˙')
     expect(rts(container)).toEqual(['˙ㄉㄜ'])
   })
+
+  it('marks each cell by its page position and the punctuation by the character before it', () => {
+    const { container } = render(<Token token={lex} mode="zhuyin" active={false} onSelect={noop} followFrom={3} followAt={4} />)
+    expect([...container.querySelectorAll('.cell')].map((el) => el.getAttribute('data-follow'))).toEqual(['read', 'current', 'ahead'])
+    cleanup()
+    render(<Token token={{ t: '，', punct: true }} mode="zhuyin" active={false} onSelect={noop} followFrom={4} followAt={4} />)
+    expect(screen.getByTestId('punct').getAttribute('data-follow')).toBe('read')
+    cleanup()
+    render(<Token token={{ t: '，', punct: true }} mode="zhuyin" active={false} onSelect={noop} followFrom={4} followAt={3} />)
+    expect(screen.getByTestId('punct').getAttribute('data-follow')).toBe('ahead')
+  })
 })

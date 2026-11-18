@@ -1,3 +1,4 @@
+import { followMark } from '../lib/followAlong'
 import { GLYPH_LENGTH, LIGHT_TONE, cellLengths, zhuyinParts } from '../lib/rubyLayout'
 import { isPunct } from '../lib/types'
 import type { PhoneticMode, Token as TokenData, WordToken } from '../lib/types'
@@ -7,6 +8,10 @@ interface Props {
   mode: PhoneticMode
   active: boolean
   onSelect: (lex: string) => void
+  /** In-page index of this token's first character (for punctuation: the character before it). */
+  followFrom?: number
+  /** In-page follow-along cursor; null when not following (no data-follow is rendered). */
+  followAt?: number | null
 }
 
 function ZhuyinRt({ zy }: { zy: string }) {
@@ -24,7 +29,8 @@ function ZhuyinRt({ zy }: { zy: string }) {
 
 // Every mode renders the same sized cells, with `<rt>` taken out of flow (see index.css and lib/rubyLayout.ts),
 // so switching modes never moves the text.
-function Annotated({ token, mode }: { token: WordToken; mode: PhoneticMode }) {
+function Annotated({ token, mode, followFrom, followAt }: { token: WordToken; mode: PhoneticMode; followFrom: number; followAt: number | null }) {
+  const follow = (i: number) => (followAt === null ? undefined : followMark(followFrom + i, followAt))
   const lengths = cellLengths(token)
   // Padding (not a fixed-size box) keeps the characters in one text run, so vertical kerning still
   // pulls 。，；！： up against the character before them (§8.2). The cell carries the page's 0.5em
@@ -37,14 +43,14 @@ function Annotated({ token, mode }: { token: WordToken; mode: PhoneticMode }) {
 
   if (mode === 'zhuyin' || mode === 'pinyin') {
     return token.chars.map((ch, i) => (
-      <ruby className="cell" style={style(i)} key={i}>
+      <ruby className="cell" style={style(i)} data-follow={follow(i)} key={i}>
         {ch.c}
         {mode === 'zhuyin' ? <ZhuyinRt zy={ch.zy} /> : <rt>{ch.py}</rt>}
       </ruby>
     ))
   }
   const cells = token.chars.map((ch, i) => (
-    <span className="cell" style={style(i)} key={i}>
+    <span className="cell" style={style(i)} data-follow={follow(i)} key={i}>
       {ch.c}
     </span>
   ))
@@ -59,15 +65,17 @@ function Annotated({ token, mode }: { token: WordToken; mode: PhoneticMode }) {
   return cells
 }
 
-export function Token({ token, mode, active, onSelect }: Props) {
+export function Token({ token, mode, active, onSelect, followFrom = 0, followAt = null }: Props) {
   if (isPunct(token)) {
+    // A mark follows the character before it: ahead while that one is ahead, otherwise already read.
+    const mark = followAt === null ? undefined : followMark(followFrom, followAt) === 'ahead' ? 'ahead' : 'read'
     return (
-      <span className="punct" data-testid="punct" lang="zh-Hans">
+      <span className="punct" data-testid="punct" data-follow={mark} lang="zh-Hans">
         {token.t}
       </span>
     )
   }
-  const content = <Annotated token={token} mode={mode} />
+  const content = <Annotated token={token} mode={mode} followFrom={followFrom} followAt={followAt} />
   if (!token.lex) return <span data-testid="token">{content}</span>
   const lex = token.lex
   return (

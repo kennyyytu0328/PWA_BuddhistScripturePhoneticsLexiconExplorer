@@ -267,6 +267,28 @@ body {
   padding-inline-start: 0.25em;
 }
 
+/* Follow-along (REQ-RDR-033): read and current keep the inherited stone-200; only unread text dims.
+   <rt> sets its own colour, so it is untouched. The current mark is out of flow (no layout shift, REQ-RDR-027). */
+.cell,
+.punct {
+  transition: color 0.3s var(--ease-zen);
+}
+
+[data-follow='ahead'] {
+  color: var(--color-stone-400);
+}
+
+.cell[data-follow='current']::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 100%;
+  margin-right: 2px;
+  width: 1px;
+  background: var(--color-amber-500);
+}
+
 rt {
   position: absolute;
   top: 50%;

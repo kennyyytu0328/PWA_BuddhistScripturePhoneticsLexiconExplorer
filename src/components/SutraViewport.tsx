@@ -84,7 +84,7 @@ export function SutraViewport({
     >
       <SutraCover title={title} />
       {segments.map((segment) => (
-        <SutraPage key={segment.id} segment={segment} mode={mode} activeKey={activeKey} onSelect={onSelect}>
+        <SutraPage key={segment.id} segment={segment} mode={mode} activeKey={activeKey} onSelect={onSelect} followAt={null}>
           <button
             type="button"
             className="vernacular-toggle"
