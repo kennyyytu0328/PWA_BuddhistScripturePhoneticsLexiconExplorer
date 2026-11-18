@@ -64,6 +64,7 @@ export function followMark(localIndex: number, cursorLocal: number): FollowMark 
 
 /** Cursor as a position inside one page, clamped to [-1, countOf[id]] so far-away pages keep stable props. */
 export function localCursor(timeline: Timeline, segmentId: string, cursor: number): number {
+  if (!(segmentId in timeline.startOf)) return -1
   const local = cursor - timeline.startOf[segmentId]
   return Math.max(-1, Math.min(timeline.countOf[segmentId], local))
 }
@@ -71,6 +72,7 @@ export function localCursor(timeline: Timeline, segmentId: string, cursor: numbe
 /** Where pressing play begins: the cover starts at 0; otherwise resume the cursor if it is on the visible page. */
 export function startIndex(timeline: Timeline, visible: string, cursor: number | null): number {
   if (visible === COVER_PAGE) return 0
+  if (!(visible in timeline.startOf)) return 0
   const start = timeline.startOf[visible]
   if (cursor !== null && cursor >= start && cursor < start + timeline.countOf[visible]) return cursor
   return start

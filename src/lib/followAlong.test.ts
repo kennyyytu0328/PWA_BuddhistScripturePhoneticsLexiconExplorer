@@ -30,6 +30,23 @@ function beatsBefore(punct: string): number[] {
   return out
 }
 
+/** Beats of every character that is not directly followed by punctuation. */
+function beatsWithoutPunct(): number[] {
+  const out: number[] = []
+  const tokens = ast.segments.flatMap((s) => s.tokens)
+  let step = 0
+  tokens.forEach((t, i) => {
+    if (isPunct(t)) return
+    step += t.chars.length
+    const next = tokens[i + 1]
+    const followed = next !== undefined && isPunct(next)
+    for (let k = 0; k < t.chars.length; k++) {
+      if (k < t.chars.length - 1 || !followed) out.push(timeline.steps[step - t.chars.length + k].beats)
+    }
+  })
+  return out
+}
+
 describe('buildTimeline', () => {
   it('has one step per character across all segments', () => {
     expect(timeline.steps).toHaveLength(260)
@@ -42,7 +59,9 @@ describe('buildTimeline', () => {
     expect(new Set(beatsBefore('。'))).toEqual(new Set([3]))
     expect(new Set(beatsBefore('：'))).toEqual(new Set([2]))
     expect(new Set(beatsBefore('；'))).toEqual(new Set([3]))
-    expect(timeline.steps.some((s) => s.beats === 1)).toBe(true)
+    expect(new Set(beatsBefore('！'))).toEqual(new Set([3]))
+    expect(beatsWithoutPunct().length).toBeGreaterThan(0)
+    expect(new Set(beatsWithoutPunct())).toEqual(new Set([1]))
     expect(timeline.steps[timeline.steps.length - 1].beats).toBe(3)
   })
 
@@ -86,6 +105,9 @@ describe('localCursor', () => {
     expect(localCursor(timeline, 's5', cursor)).toBe(-1)
     expect(localCursor(timeline, 's3', cursor)).toBe(2)
   })
+  it('returns -1 for an unknown segment', () => {
+    expect(localCursor(timeline, 'nope', 5)).toBe(-1)
+  })
 })
 
 describe('startIndex', () => {
@@ -99,5 +121,9 @@ describe('startIndex', () => {
     const cursor = timeline.startOf.s4 + 2
     expect(startIndex(timeline, 's4', cursor)).toBe(cursor)
     expect(startIndex(timeline, 's2', cursor)).toBe(timeline.startOf.s2)
+  })
+  it('falls back to 0 for an unknown page', () => {
+    expect(startIndex(timeline, 'nope', null)).toBe(0)
+    expect(startIndex(timeline, 'nope', 7)).toBe(0)
   })
 })
