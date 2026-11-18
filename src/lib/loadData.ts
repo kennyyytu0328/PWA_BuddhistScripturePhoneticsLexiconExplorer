@@ -6,7 +6,7 @@ import type { ReaderData } from './types'
 const AST_URL = 'data/heart-sutra.ast.json'
 const LEXICON_URL = 'data/lexicon.dfb.json'
 
-async function fetchJson<S extends z.ZodType>(url: string, schema: S): Promise<z.infer<S>> {
+export async function fetchJson<S extends z.ZodType>(url: string, schema: S): Promise<z.infer<S>> {
   const response = await fetch(url)
   if (!response.ok) throw new Error(`Failed to load ${url}: HTTP ${response.status}`)
   return schema.parse(await response.json())

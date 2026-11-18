@@ -491,3 +491,4 @@
   7. 時間碼 `data/voice-timings.json` 為已審閱資料，由一次性腳本從 SRT 與錄音產生；驗證與發佈在 `pnpm build:voice`（REQ-DAT-022）。
   8. 句內各字平均分配在句首與發聲結束之間；咒語以錄音停頓切句，不成時人工覆寫。
   9. 時間碼帶 `review.voice` 旗標，使用者全經試聽確認後才改為 true；正式建置在 false 時中止。
+  - 凍結測試 `follow-along.spec.ts` 兩則 REQ-RDR-032 測試（輪替順序、偏好保存）依修改後的輪替加入「聲」後重新凍結，斷言邏輯不變。

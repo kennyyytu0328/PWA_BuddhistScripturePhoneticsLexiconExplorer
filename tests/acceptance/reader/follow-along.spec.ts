@@ -323,19 +323,26 @@ test.describe('REQ-RDR-032 controls', () => {
     await expect(toggleBtn(page)).toHaveAttribute('aria-label', '開始隨誦')
   })
 
-  test('[REQ-RDR-032] follow-pace shows 中 / 每分鐘 225 字 by default and cycles 中 → 快 → 慢 → 中', async ({ page }) => {
+  test('[REQ-RDR-032] follow-pace shows 中 / 每分鐘 225 字 by default and cycles 中 → 快 → 慢 → 聲 → 中', async ({ page }) => {
     await gotoReader(page)
-    const expected: [string, number][] = [['中', 225], ['快', 300], ['慢', 150], ['中', 225]]
-    for (const [i, [text, n]] of expected.entries()) {
+    // 2026-11-18 Q-RDR-055: the cycle gains a fourth step 聲 (原音朗讀)
+    const expected: [string, string][] = [
+      ['中', '隨誦速度：每分鐘 225 字'],
+      ['快', '隨誦速度：每分鐘 300 字'],
+      ['慢', '隨誦速度：每分鐘 150 字'],
+      ['聲', '隨誦速度：原音朗讀'],
+      ['中', '隨誦速度：每分鐘 225 字'],
+    ]
+    for (const [i, [text, label]] of expected.entries()) {
       if (i > 0) await paceBtn(page).click()
       await expect(paceBtn(page)).toHaveText(text)
-      await expect(paceBtn(page)).toHaveAttribute('aria-label', `隨誦速度：每分鐘 ${n} 字`)
+      await expect(paceBtn(page)).toHaveAttribute('aria-label', label)
     }
   })
 
   test('[REQ-RDR-032] the pace is saved in IndexedDB prefs under followPace as the strings "300" / "150" / "225" and restored after reload', async ({ page }) => {
     await gotoReader(page)
-    const steps: [string, string][] = [['快', '300'], ['慢', '150'], ['中', '225']]
+    const steps: [string, string][] = [['快', '300'], ['慢', '150'], ['聲', 'voice'], ['中', '225']] // 聲: Q-RDR-055
     for (const [text, value] of steps) {
       await paceBtn(page).click()
       await expect(paceBtn(page)).toHaveText(text)
