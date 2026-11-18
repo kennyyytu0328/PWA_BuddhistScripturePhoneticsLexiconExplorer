@@ -1,15 +1,15 @@
 import { COVER_PAGE } from './cover'
 import { isPunct, type Segment } from './types'
 
-export const PACES = [60, 100, 150] as const
+export const PACES = [150, 225, 300] as const
 export type Pace = (typeof PACES)[number]
-export const DEFAULT_PACE: Pace = 100
+export const DEFAULT_PACE: Pace = 225
 
-export const PACE_LABEL: Record<Pace, string> = { 60: '慢', 100: '中', 150: '快' }
+export const PACE_LABEL: Record<Pace, string> = { 150: '慢', 225: '中', 300: '快' }
 
-const NEXT_PACE: Record<Pace, Pace> = { 100: 150, 150: 60, 60: 100 }
+const NEXT_PACE: Record<Pace, Pace> = { 225: 300, 300: 150, 150: 225 }
 
-/** Cycle slow -> medium -> fast order used by the pace button: 100 -> 150 -> 60 -> 100. */
+/** Cycle slow -> medium -> fast order used by the pace button: 225 -> 300 -> 150 -> 225. */
 export const nextPace = (pace: Pace): Pace => NEXT_PACE[pace]
 
 export const isPace = (value: string | null): boolean => PACES.some((pace) => String(pace) === value)

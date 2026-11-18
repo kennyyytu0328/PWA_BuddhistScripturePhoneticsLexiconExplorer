@@ -73,20 +73,21 @@ describe('buildTimeline', () => {
 })
 
 describe('pace helpers', () => {
-  it('cycles 100 -> 150 -> 60 -> 100', () => {
-    expect(nextPace(100)).toBe(150)
-    expect(nextPace(150)).toBe(60)
-    expect(nextPace(60)).toBe(100)
+  it('cycles 225 -> 300 -> 150 -> 225', () => {
+    expect(nextPace(225)).toBe(300)
+    expect(nextPace(300)).toBe(150)
+    expect(nextPace(150)).toBe(225)
   })
   it('validates stored values', () => {
-    expect(isPace('100')).toBe(true)
+    expect(isPace('225')).toBe(true)
+    expect(isPace('100')).toBe(false)
     expect(isPace('80')).toBe(false)
     expect(isPace(null)).toBe(false)
   })
   it('labels and converts', () => {
-    expect(PACE_LABEL).toEqual({ 60: '慢', 100: '中', 150: '快' })
-    expect(beatMs(60)).toBe(1000)
+    expect(PACE_LABEL).toEqual({ 150: '慢', 225: '中', 300: '快' })
     expect(beatMs(150)).toBe(400)
+    expect(beatMs(300)).toBe(200)
   })
 })
 

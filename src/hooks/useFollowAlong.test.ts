@@ -15,7 +15,7 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-const setup = (pace: Pace = 100) =>
+const setup = (pace: Pace = 225) =>
   renderHook(({ pace: p }) => useFollowAlong(timeline, p), { initialProps: { pace } })
 
 describe('useFollowAlong', () => {
@@ -24,7 +24,7 @@ describe('useFollowAlong', () => {
     act(() => result.current.play(COVER_PAGE))
     expect(result.current.cursor).toBe(0)
     expect(result.current.playing).toBe(true)
-    act(() => void vi.advanceTimersByTime(ms(100, 0) - 1))
+    act(() => void vi.advanceTimersByTime(ms(225, 0) - 1))
     expect(result.current.cursor).toBe(0)
     act(() => void vi.advanceTimersByTime(1))
     expect(result.current.cursor).toBe(1)
@@ -33,7 +33,7 @@ describe('useFollowAlong', () => {
   it('one long jump of time advances through every beat that elapsed', () => {
     const { result } = setup()
     act(() => result.current.play(COVER_PAGE))
-    const total = [0, 1, 2, 3, 4].reduce((sum, i) => sum + ms(100, i), 0)
+    const total = [0, 1, 2, 3, 4].reduce((sum, i) => sum + ms(225, i), 0)
     act(() => void vi.advanceTimersByTime(total))
     expect(result.current.cursor).toBe(5)
   })
@@ -43,21 +43,21 @@ describe('useFollowAlong', () => {
     act(() => result.current.play(COVER_PAGE))
     act(() => {
       result.current.pause()
-      vi.advanceTimersByTime(ms(100, 0))
+      vi.advanceTimersByTime(ms(225, 0))
     })
     expect(result.current.cursor).toBe(0)
     act(() => result.current.play('s1'))
-    act(() => void vi.advanceTimersByTime(beatMs(100) * 10))
+    act(() => void vi.advanceTimersByTime(beatMs(225) * 10))
     expect(result.current.cursor).toBeGreaterThan(0)
   })
 
   it('pause keeps the cursor and resumes from it', () => {
     const { result } = setup()
     act(() => result.current.play(COVER_PAGE))
-    act(() => void vi.advanceTimersByTime(ms(100, 0)))
+    act(() => void vi.advanceTimersByTime(ms(225, 0)))
     act(() => result.current.pause())
     expect(result.current.playing).toBe(false)
-    act(() => void vi.advanceTimersByTime(beatMs(100) * 10))
+    act(() => void vi.advanceTimersByTime(beatMs(225) * 10))
     expect(result.current.cursor).toBe(1)
     act(() => result.current.play('s1'))
     expect(result.current.cursor).toBe(1)
@@ -67,11 +67,11 @@ describe('useFollowAlong', () => {
   it('resuming mid-beat keeps the cursor and advances within one beat', () => {
     const { result } = setup()
     act(() => result.current.play(COVER_PAGE))
-    act(() => void vi.advanceTimersByTime(ms(100, 0) / 2))
+    act(() => void vi.advanceTimersByTime(ms(225, 0) / 2))
     act(() => result.current.pause())
     act(() => result.current.play('s1'))
     expect(result.current.cursor).toBe(0)
-    act(() => void vi.advanceTimersByTime(ms(100, 0)))
+    act(() => void vi.advanceTimersByTime(ms(225, 0)))
     expect(result.current.cursor).toBe(1)
   })
 
@@ -82,20 +82,20 @@ describe('useFollowAlong', () => {
   })
 
   it('pace change applies from the next beat with a single timer', () => {
-    const { result, rerender } = setup(100)
+    const { result, rerender } = setup(225)
     act(() => result.current.play(COVER_PAGE))
-    act(() => void vi.advanceTimersByTime(300))
-    rerender({ pace: 150 })
+    act(() => void vi.advanceTimersByTime(130))
+    rerender({ pace: 300 })
     expect(vi.getTimerCount()).toBe(1)
-    act(() => void vi.advanceTimersByTime(250)) // t = 550
+    act(() => void vi.advanceTimersByTime(100)) // t = 230
     expect(result.current.cursor).toBe(0)
-    act(() => void vi.advanceTimersByTime(50)) // t = 600: old beat completes
+    act(() => void vi.advanceTimersByTime(50)) // t = 280: old beat (266.67ms) completes
     expect(result.current.cursor).toBe(1)
     expect(vi.getTimerCount()).toBe(1)
-    const second = ms(150, 1)
-    act(() => void vi.advanceTimersByTime(second - 1))
+    const second = ms(300, 1)
+    act(() => void vi.advanceTimersByTime(second - 60)) // t = 420, beat 2 ends at ~467
     expect(result.current.cursor).toBe(1)
-    act(() => void vi.advanceTimersByTime(1))
+    act(() => void vi.advanceTimersByTime(60)) // t = 480
     expect(result.current.cursor).toBe(2)
   })
 
@@ -107,7 +107,7 @@ describe('useFollowAlong', () => {
     act(() => result.current.pause())
     act(() => result.current.play(COVER_PAGE))
     expect(vi.getTimerCount()).toBe(1)
-    act(() => void vi.advanceTimersByTime(ms(100, 0)))
+    act(() => void vi.advanceTimersByTime(ms(225, 0)))
     expect(result.current.cursor).toBe(1)
   })
 
@@ -116,7 +116,7 @@ describe('useFollowAlong', () => {
     act(() => result.current.play(COVER_PAGE))
     act(() => {
       result.current.pause()
-      vi.advanceTimersByTime(ms(100, 0))
+      vi.advanceTimersByTime(ms(225, 0))
     })
     expect(result.current.playing).toBe(false)
     expect(result.current.cursor).toBe(0)
@@ -127,7 +127,7 @@ describe('useFollowAlong', () => {
     const seen: Array<number | null> = []
     const { result, rerender } = renderHook(
       ({ t }) => {
-        const r = useFollowAlong(t, 100)
+        const r = useFollowAlong(t, 225)
         seen.push(r.cursor)
         return r
       },
@@ -148,7 +148,7 @@ describe('useFollowAlong', () => {
     let renders = 0
     const { result } = renderHook(() => {
       renders++
-      return useFollowAlong(timeline, 100)
+      return useFollowAlong(timeline, 225)
     })
     const before = renders
     act(() => result.current.pause())
@@ -157,10 +157,10 @@ describe('useFollowAlong', () => {
   })
 
   it('under StrictMode keeps a single timer and advances once per beat', () => {
-    const { result } = renderHook(() => useFollowAlong(timeline, 100), { reactStrictMode: true })
+    const { result } = renderHook(() => useFollowAlong(timeline, 225), { reactStrictMode: true })
     act(() => result.current.play(COVER_PAGE))
     expect(vi.getTimerCount()).toBe(1)
-    act(() => void vi.advanceTimersByTime(ms(100, 0)))
+    act(() => void vi.advanceTimersByTime(ms(225, 0)))
     expect(result.current.cursor).toBe(1)
     expect(vi.getTimerCount()).toBe(1)
   })
@@ -171,7 +171,7 @@ describe('useFollowAlong', () => {
     expect(timeline.steps[0].beats).toBe(1)
     const lastSegment = timeline.steps[last].segmentId
     act(() => result.current.play(lastSegment))
-    for (let i = timeline.startOf[lastSegment]; i <= last; i++) act(() => void vi.advanceTimersByTime(ms(100, i)))
+    for (let i = timeline.startOf[lastSegment]; i <= last; i++) act(() => void vi.advanceTimersByTime(ms(225, i)))
     expect(result.current.cursor).toBeNull()
     expect(result.current.playing).toBe(false)
     expect(vi.getTimerCount()).toBe(0)
