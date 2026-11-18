@@ -226,6 +226,39 @@ describe('SutraViewport', () => {
         expect(cancel).toHaveBeenCalled()
       })
 
+      it('settles by layout position: transformed (old-page) rects do not hide the landing on the target', () => {
+        const onPageChange = vi.fn()
+        const { rerender } = render(<SutraViewport {...props} followSegment="s1" onPageChange={onPageChange} />)
+        rerender(<SutraViewport {...props} followSegment="s2" onPageChange={onPageChange} />)
+        onPageChange.mockClear()
+        // Mid-slide: s2 is laid out at the edge (400) but translated 400px away; s1 appears at the edge.
+        const pages = screen.getAllByTestId('sutra-page')
+        pages[1].style.transform = 'translateX(400px)'
+        pages[0].style.transform = 'translateX(400px)'
+        vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+          const seg = this.dataset.segment
+          return rect(seg === 's2' ? 800 : seg === 's1' ? 400 : seg ? -10_000 : 400)
+        })
+        fireEvent.scroll(screen.getByTestId('sutra-viewport'))
+        act(() => vi.advanceTimersByTime(200))
+        expect(onPageChange).toHaveBeenCalledWith('s2', 'auto')
+      })
+
+      it('a turn that moves nothing leaves no stale auto target: a later swipe is a user swipe', () => {
+        const onPageChange = vi.fn()
+        // layout already has the cover at the edge, so nothing moves and no scrollend would follow
+        vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+          return rect(this.dataset.segment === 'cover' ? 400 : this.dataset.segment ? 800 : 400)
+        })
+        const { rerender } = render(<SutraViewport {...props} followSegment="s1" onPageChange={onPageChange} />)
+        rerender(<SutraViewport {...props} followSegment="s2" onPageChange={onPageChange} />)
+        rerender(<SutraViewport {...props} followSegment={null} onPageChange={onPageChange} />)
+        atS2()
+        fireEvent.scroll(screen.getByTestId('sutra-viewport'))
+        act(() => vi.advanceTimersByTime(200))
+        expect(onPageChange).toHaveBeenCalledWith('s2', 'user')
+      })
+
       it('reports a settle with no followSegment change as user', () => {
         const onPageChange = vi.fn()
         render(<SutraViewport {...props} followSegment="s1" onPageChange={onPageChange} />)

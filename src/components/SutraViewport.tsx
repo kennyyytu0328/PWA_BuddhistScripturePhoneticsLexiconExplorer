@@ -22,7 +22,10 @@ interface Props {
   onPageChange?: (segmentId: string, source: 'user' | 'auto') => void
   /** Follow-along cursor; decides each page's character states. */
   follow?: { timeline: Timeline; cursor: number } | null
-  /** Page holding the playing cursor; when it changes to a page other than the visible one, the fold turns there. */
+  /**
+   * Page holding the playing cursor; when it changes to a page other than the visible one, the fold turns there.
+   * A settle on this page (including the reader swiping back onto it) is reported as 'auto'; only swipes to other pages are 'user'.
+   */
   followSegment?: string | null
   /** Opens the 白話參考 panel of a page. */
   onOpenVernacular?: (segment: Segment) => void
@@ -32,12 +35,23 @@ const supportsScrollEnd = () => 'onscrollend' in window
 
 const pagesOf =(container: HTMLElement) => Array.from(container.children) as HTMLElement[]
 
+/** Horizontal offset of a transform (computed `matrix(...)` or a plain `translateX(...)`); 0 for none. */
+function translateX(el: HTMLElement): number {
+  const transform = getComputedStyle(el).transform
+  const matrix = /^matrix(?:3d)?\(([^)]*)\)$/.exec(transform)
+  if (matrix) {
+    const values = matrix[1].split(',').map(Number)
+    return (values.length === 6 ? values[4] : values[12]) || 0
+  }
+  return Number.parseFloat(/translateX\(([-\d.]+)px\)/.exec(transform)?.[1] ?? '') || 0
+}
+
 // The container is rtl, so a page is "current" when its right edge sits closest to the container's.
+// Transforms (the page-turn slide) are subtracted: the page counts where layout and scroll put it.
 function currentSegment(container: HTMLElement): string | null {
   const right = container.getBoundingClientRect().right
-  const [nearest] = pagesOf(container).sort(
-    (a, b) => Math.abs(a.getBoundingClientRect().right - right) - Math.abs(b.getBoundingClientRect().right - right),
-  )
+  const layoutRight = (page: HTMLElement) => page.getBoundingClientRect().right - translateX(page)
+  const [nearest] = pagesOf(container).sort((a, b) => Math.abs(layoutRight(a) - right) - Math.abs(layoutRight(b) - right))
   return nearest?.dataset.segment ?? null
 }
 
@@ -85,6 +99,25 @@ export function SutraViewport({
     [],
   )
 
+  // A stored segment that no longer exists leaves the reader on the cover, so it counts as opening there.
+  useCoverPeek(ref, !segments.some((segment) => segment.id === initialSegment))
+
+  const settle = () => {
+    const id = currentSegment(ref.current!)
+    const auto = id === autoTarget.current || id === followSegment
+    autoTarget.current = null
+    if (!id || id === lastSegment.current) return
+    lastSegment.current = id
+    onPageChange?.(id, auto ? 'auto' : 'user')
+  }
+
+  // scrollend fires once the snap has finished; without it, a pause of SETTLE_MS stands in for the snap.
+  const handleScroll = () => {
+    if (supportsScrollEnd()) return
+    clearTimeout(timer.current)
+    timer.current = setTimeout(settle, SETTLE_MS)
+  }
+
   // The cursor entering another page turns the fold; an earlier turn still running is cancelled first.
   useEffect(() => {
     const changed = previousFollow.current !== followSegment
@@ -96,26 +129,12 @@ export function SutraViewport({
     turning.current.forEach((a) => a.cancel())
     autoTarget.current = followSegment
     turning.current = turnToPage(ref.current!, target)
+    // The instant scroll has already moved layout (the slide is only a transform), so the landing can be resolved now;
+    // a turn that moved nothing fires no scrollend and would otherwise leave autoTarget stale.
+    settle()
+    // Runs only when followSegment changes (settle reads the latest props through the render it was created in).
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [followSegment])
-
-  // A stored segment that no longer exists leaves the reader on the cover, so it counts as opening there.
-  useCoverPeek(ref, !segments.some((segment) => segment.id === initialSegment))
-
-  const settle = () => {
-    const id = currentSegment(ref.current!)
-    if (!id || id === lastSegment.current) return
-    lastSegment.current = id
-    const auto = id === autoTarget.current || id === followSegment
-    autoTarget.current = null
-    onPageChange?.(id, auto ? 'auto' : 'user')
-  }
-
-  // scrollend fires once the snap has finished; without it, a pause of SETTLE_MS stands in for the snap.
-  const handleScroll = () => {
-    if (supportsScrollEnd()) return
-    clearTimeout(timer.current)
-    timer.current = setTimeout(settle, SETTLE_MS)
-  }
 
   return (
     <main
