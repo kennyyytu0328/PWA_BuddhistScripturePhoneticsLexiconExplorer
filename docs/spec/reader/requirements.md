@@ -1,5 +1,5 @@
 # 需求登錄表 — reader 單元
-> 狀態：已確認（2026-10-17，使用者確認；Q-RDR-001～015、017～032 採 A，016 採 B，皆已併入；REQ-RDR-029 於 2026-10-19 依 Q-RDR-018 新增；2026-10-20 實機試看後依 Q-RDR-036～038 修改 REQ-RDR-002、003、008、011，新增 REQ-RDR-030；2026-10-21 依 Q-RDR-042 新增 REQ-RDR-031）。
+> 狀態：已確認（2026-10-17，使用者確認；Q-RDR-001～015、017～032 採 A，016 採 B，皆已併入；REQ-RDR-029 於 2026-10-19 依 Q-RDR-018 新增；2026-10-20 實機試看後依 Q-RDR-036～038 修改 REQ-RDR-002、003、008、011，新增 REQ-RDR-030；2026-10-21 依 Q-RDR-042 新增 REQ-RDR-031；2026-11-17 依 Q-RDR-049 新增 REQ-RDR-032～037，修改 REQ-RDR-020、021）。
 > 來源：`CLAUDE.md`（行號依 2026-10-17 版本，commit 2279ebe）；依賴單元 `data`：產物格式見 `docs/spec/data/requirements.md` 的 REQ-DAT-002（AST）、003（辭典）、004（授權）、011／012（釋義與造字）、016（IAST）、019（無 lex 不可點擊）。
 > 範圍：§1 核心體驗、§4-2（UI 部分）、§6、§7、§8.2、8.4、8.5、8.6。PWA 安裝與離線（§5、§8.3）屬後續 `pwa` 單元。
 
@@ -246,7 +246,7 @@
   - Given 不支援或請求被拒
   - Then 不拋錯，閱讀照常
   - And hook 位於 `src/hooks/useWakeLock.ts`
-  - And 閱讀畫面開啟且在前景時一律常亮，不提供開關（Q-RDR-006）
+  - And 閱讀畫面開啟且在前景時一律常亮，不提供開關（Q-RDR-006）：畫面上沒有 switch／checkbox／radio，按鈕只有 `lex-token`、`phonetic-toggle`、`vernacular-toggle`、`follow-pace`、`follow-toggle`（2026-11-17 依 Q-RDR-049 修改，加入隨誦兩鍵）
 - 狀態：確認
 
 ## 視覺原則（§6.5）
@@ -258,7 +258,7 @@
 - 驗收：
   - Given 閱讀畫面、抽屜開啟、白話參考開啟三種狀態
   - Then 除流光底色（REQ-RDR-025）外，所有元素的文字色、背景色、邊框色皆為灰階或琥珀色
-  - And 灰階以 RGB 三通道最大值與最小值的差 ≤ 10（0–255）判定（含 stone 系暖灰）；琥珀色只出現在 `<rt>` 與名相高亮（Q-RDR-012、Q-RDR-020）
+  - And 灰階以 RGB 三通道最大值與最小值的差 ≤ 10（0–255）判定（含 stone 系暖灰）；琥珀色只出現在 `<rt>`、名相高亮與隨誦當前字標記（REQ-RDR-033）（Q-RDR-012、Q-RDR-020；2026-11-17 依 Q-RDR-049 修改）
 - 狀態：確認
 
 ### REQ-RDR-022 字型打包
@@ -375,4 +375,93 @@
   - Then 不輕推，也不寫入 `peek` 紀錄
   - Given `prefers-reduced-motion: reduce`
   - Then 不輕推；滑動提示照常顯示
+- 狀態：確認
+
+## 隨誦
+
+### REQ-RDR-032 隨誦控制鍵
+- 來源：CLAUDE.md §1、§6.4（2026-11-17 新增）；Q-RDR-049 隨附決議 1
+- 類型：UI／行為
+- 驗收：
+  - Given 閱讀畫面（含封面）
+  - Then 有 `button[data-testid="follow-pace"]` 與 `button[data-testid="follow-toggle"]`，皆為 `position: fixed`，下緣與 `phonetic-toggle` 下緣同高（±1px）
+  - And `follow-toggle` 右緣距視窗右緣 16px（±1px）；`follow-pace` 在其左側，兩者間距 8px（±1px）
+  - And 兩者皆為 44×44px、`border-radius` 為 full（≥ 22px）、背景 stone-900 80% 不透明並有 backdrop blur、邊框同音標膠囊；文字為 Noto Sans TC、字重 300–400
+  - And 360×640 與 Pixel 7 下，兩鍵不與 `phonetic-toggle`、`vernacular-toggle`、`swipe-hint` 重疊
+  - And `follow-toggle` 未播放時文字「誦」、`aria-pressed="false"`、`aria-label="開始隨誦"`；播放中文字「停」、`aria-pressed="true"`、`aria-label="暫停隨誦"`
+  - And `follow-pace` 文字「慢」「中」「快」分別對應每分鐘 60、100、150 字，`aria-label` 為「隨誦速度：每分鐘 N 字」（N 為 60／100／150）
+  - When 連續點擊 `follow-pace`
+  - Then 速度依 中 → 快 → 慢 → 中 輪替
+  - And 選擇存於 IndexedDB `sutraflow/prefs` 鍵 `followPace`，值為字串 `"60"`／`"100"`／`"150"`；重新載入後還原；無紀錄或值無效時為 100（中）
+  - When 播放中改變速度
+  - Then 自下一拍起以新速度前進
+- 狀態：確認
+
+### REQ-RDR-033 節拍與逐字配色
+- 來源：CLAUDE.md §1、§6.5（2026-11-17 新增）；Q-RDR-049 隨附決議 2、3、7
+- 類型：UI／行為
+- 驗收：
+  - Given 速度為每分鐘 N 字
+  - Then 光標在每個字停留 60000／N 毫秒；字後緊接「，」或「：」者多停 1 拍，緊接「。」「；」「！」者多停 2 拍（1 拍 = 60000／N 毫秒）
+  - Given 隨誦進行中（含暫停）
+  - Then 每個經文字格 `.cell` 帶 `data-follow`：光標之前的字為 `read`、光標所在字為 `current`、之後為 `ahead`
+  - And 標點的 `data-follow` 同其前一字的類別：前一字為 `ahead` 則為 `ahead`，否則為 `read`
+  - And `ahead` 的文字色為 stone-400（`#a8a29e`）；`read` 與 `current` 的文字色為 stone-200（`#e7e5e4`）；`<rt>` 音標顏色不受影響
+  - And `current` 字格的 `::after` 為 1px 寬、amber-500（`#f59e0b`）的直線，位於字的左側，長度等於該字格長度，不與 `<rt>` 重疊
+  - And 文字色轉換 ≤ 0.3s，緩動為 `cubic-bezier(0.19, 1, 0.22, 1)`
+  - And 狀態變化前後，所有 `.cell` 的 bounding box 不變（CLS = 0）
+  - Given 隨誦未開始或已結束
+  - Then 沒有任何元素帶 `data-follow`，經文顏色同現行
+- 狀態：確認
+
+### REQ-RDR-034 自動翻頁
+- 來源：CLAUDE.md §1（2026-11-17 新增）；Q-RDR-049
+- 類型：UI／行為
+- 驗收：
+  - Given 隨誦播放中
+  - When 光標進到下一頁第一字
+  - Then 經摺翻到該頁；停靠後該頁右緣 = 視窗右緣（±1.5px）
+  - And 翻頁動畫 1.2 秒內完成，緩動為 `cubic-bezier(0.19, 1, 0.22, 1)`
+  - And `prefers-reduced-motion: reduce` 時 100ms 內對齊
+  - And 翻頁照常寫入閱讀進度（REQ-RDR-011），不造成暫停
+- 狀態：確認
+
+### REQ-RDR-035 暫停與續誦
+- 來源：CLAUDE.md §1（2026-11-17 新增）；Q-RDR-049、隨附決議 6
+- 類型：行為
+- 驗收：
+  - Given 隨誦播放中
+  - When 下列任一發生：點擊 `follow-toggle`；開啟名相抽屜；開啟白話參考；使用者滑動且停靠在光標所在頁以外的頁；`document.visibilityState` 變為 `hidden`
+  - Then 隨誦暫停（`follow-toggle` 文字「誦」），光標不再前進
+  - And 暫停時保留所有 `data-follow` 與進度線（REQ-RDR-036）；關閉抽屜或白話參考不自動續誦
+  - When 按「誦」
+  - Then 所見頁為光標所在頁 → 從光標處續誦
+  - And 所見頁為其他經文頁 → 光標移到所見頁第一字開始
+  - And 所見為封面 → 經摺翻到 s1，從 s1 第一字開始
+  - Given 依 REQ-RDR-011 開在 s4（尚未隨誦）
+  - When 按「誦」
+  - Then 從 s4 第一字開始
+  - And 點擊沒有 `lex` 的一般字不影響隨誦
+- 狀態：確認
+
+### REQ-RDR-036 隨誦進度線
+- 來源：CLAUDE.md §1（2026-11-17 新增）；Q-RDR-049 隨附決議 4
+- 類型：UI
+- 驗收：
+  - Given 隨誦進行中（含暫停）
+  - Then 有 `[data-testid="follow-progress"]`：`position: fixed`、上緣 = `env(safe-area-inset-top)`、高 1px、背景 stone-400（`#a8a29e`）、`aria-hidden="true"`、`pointer-events: none`
+  - And 其右端貼齊視窗右緣，寬度 = 視窗寬 ×（光標序號 + 1）／ 260（全經 260 字，光標序號自 0 起；±2px，於 transition 結束後量測）
+  - Given 隨誦未開始或已結束
+  - Then 不存在 `follow-progress`
+- 狀態：確認
+
+### REQ-RDR-037 誦畢
+- 來源：CLAUDE.md §1（2026-11-17 新增）；Q-RDR-049 隨附決議 5
+- 類型：行為
+- 驗收：
+  - Given 隨誦播放中
+  - When 最後一字「訶」的拍數走完
+  - Then 隨誦結束：`follow-toggle` 文字「誦」、`aria-pressed="false"`；所有 `data-follow` 與 `follow-progress` 移除；畫面停在 s9
+  - When 再按「誦」
+  - Then 從 s9 第一字開始
 - 狀態：確認
