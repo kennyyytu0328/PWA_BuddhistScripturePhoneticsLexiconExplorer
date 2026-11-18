@@ -1,8 +1,8 @@
-import { PACE_LABEL, type Pace } from '../lib/followAlong'
+import { MODE_LABEL, type FollowMode } from '../lib/followAlong'
 
 interface Props {
   playing: boolean
-  pace: Pace
+  pace: FollowMode
   onToggle: () => void
   onCyclePace: () => void
 }
@@ -14,10 +14,10 @@ export function FollowControls({ playing, pace, onToggle, onCyclePace }: Props) 
         type="button"
         className="follow-button"
         data-testid="follow-pace"
-        aria-label={`隨誦速度：每分鐘 ${pace} 字`}
+        aria-label={pace === 'voice' ? '隨誦速度：原音朗讀' : `隨誦速度：每分鐘 ${pace} 字`}
         onClick={onCyclePace}
       >
-        {PACE_LABEL[pace]}
+        {MODE_LABEL[pace]}
       </button>
       <button
         type="button"

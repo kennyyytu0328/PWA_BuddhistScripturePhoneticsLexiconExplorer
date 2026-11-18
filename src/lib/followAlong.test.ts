@@ -4,10 +4,10 @@ import {
   beatMs,
   buildTimeline,
   followMark,
-  isPace,
+  isFollowMode,
   localCursor,
-  nextPace,
-  PACE_LABEL,
+  MODE_LABEL,
+  nextMode,
   startIndex,
 } from './followAlong'
 import { sutraSegments } from '../test/sutraFixture'
@@ -72,20 +72,23 @@ describe('buildTimeline', () => {
   })
 })
 
-describe('pace helpers', () => {
-  it('cycles 225 -> 300 -> 150 -> 225', () => {
-    expect(nextPace(225)).toBe(300)
-    expect(nextPace(300)).toBe(150)
-    expect(nextPace(150)).toBe(225)
+describe('mode helpers', () => {
+  it("cycles 225 -> 300 -> 150 -> 'voice' -> 225", () => {
+    expect(nextMode(225)).toBe(300)
+    expect(nextMode(300)).toBe(150)
+    expect(nextMode(150)).toBe('voice')
+    expect(nextMode('voice')).toBe(225)
   })
   it('validates stored values', () => {
-    expect(isPace('225')).toBe(true)
-    expect(isPace('100')).toBe(false)
-    expect(isPace('80')).toBe(false)
-    expect(isPace(null)).toBe(false)
+    expect(isFollowMode('225')).toBe(true)
+    expect(isFollowMode('voice')).toBe(true)
+    expect(isFollowMode('60')).toBe(false)
+    expect(isFollowMode('100')).toBe(false)
+    expect(isFollowMode('80')).toBe(false)
+    expect(isFollowMode(null)).toBe(false)
   })
   it('labels and converts', () => {
-    expect(PACE_LABEL).toEqual({ 150: '慢', 225: '中', 300: '快' })
+    expect(MODE_LABEL).toEqual({ 150: '慢', 225: '中', 300: '快', voice: '聲' })
     expect(beatMs(150)).toBe(400)
     expect(beatMs(300)).toBe(200)
   })

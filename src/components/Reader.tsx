@@ -27,7 +27,9 @@ export function Reader({ data }: Props) {
   const { pace, cycle: cyclePace } = useFollowPace()
   const segments = data.ast.segments
   const timeline = useMemo(() => buildTimeline(segments), [segments])
-  const { cursor, playing, play, pause } = useFollowAlong(timeline, pace ?? DEFAULT_PACE)
+  // Temporary until the voice driver lands: 聲 runs at the default pace.
+  const timedPace = pace === null || pace === 'voice' ? DEFAULT_PACE : pace
+  const { cursor, playing, play, pause } = useFollowAlong(timeline, timedPace)
   const [visible, setVisible] = useState<string | null>(null)
   // The segment stays set after closing so the panel content survives the slide-out animation.
   const [vernacular, setVernacular] = useState<{ segment: Segment; open: boolean } | null>(null)

@@ -32,6 +32,13 @@ describe('FollowControls', () => {
     expect(button.getAttribute('aria-label')).toBe(`隨誦速度：每分鐘 ${pace} 字`)
   })
 
+  it('voice shows 聲 with the recording label', () => {
+    render(<FollowControls playing={false} pace="voice" onToggle={() => {}} onCyclePace={() => {}} />)
+    const button = screen.getByTestId('follow-pace')
+    expect(button.textContent).toBe('聲')
+    expect(button.getAttribute('aria-label')).toBe('隨誦速度：原音朗讀')
+  })
+
   it('calls the matching callbacks', () => {
     const onToggle = vi.fn()
     const onCyclePace = vi.fn()

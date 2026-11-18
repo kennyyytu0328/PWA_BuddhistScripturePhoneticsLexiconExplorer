@@ -5,14 +5,22 @@ export const PACES = [150, 225, 300] as const
 export type Pace = (typeof PACES)[number]
 export const DEFAULT_PACE: Pace = 225
 
-export const PACE_LABEL: Record<Pace, string> = { 150: '慢', 225: '中', 300: '快' }
+/** A timed pace, or 'voice': the cursor follows the recording (REQ-RDR-038). */
+export type FollowMode = Pace | 'voice'
 
-const NEXT_PACE: Record<Pace, Pace> = { 225: 300, 300: 150, 150: 225 }
+const MODES: readonly FollowMode[] = [...PACES, 'voice']
 
-/** Cycle slow -> medium -> fast order used by the pace button: 225 -> 300 -> 150 -> 225. */
-export const nextPace = (pace: Pace): Pace => NEXT_PACE[pace]
+export const MODE_LABEL: Record<FollowMode, string> = { 150: '慢', 225: '中', 300: '快', voice: '聲' }
 
-export const isPace = (value: string | null): boolean => PACES.some((pace) => String(pace) === value)
+const NEXT_MODE: Record<FollowMode, FollowMode> = { 225: 300, 300: 150, 150: 'voice', voice: 225 }
+
+/** Order used by the pace button: 225 -> 300 -> 150 -> 'voice' -> 225 (REQ-RDR-032). */
+export const nextMode = (mode: FollowMode): FollowMode => NEXT_MODE[mode]
+
+export const isFollowMode = (value: string | null): boolean => MODES.some((mode) => String(mode) === value)
+
+/** Stored preference string -> mode; call only after isFollowMode. */
+export const parseFollowMode = (value: string): FollowMode => (value === 'voice' ? 'voice' : (Number(value) as Pace))
 
 /** Extra beats the cursor rests on the character before a punctuation mark. */
 const PAUSE_BEATS: Record<string, number> = { '，': 1, '：': 1, '。': 2, '；': 2, '！': 2 }

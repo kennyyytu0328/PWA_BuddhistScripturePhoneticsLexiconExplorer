@@ -20,13 +20,19 @@ describe('useFollowPace', () => {
     await waitFor(() => expect(result.current.pace).toBe(150))
   })
 
+  it('restores a stored voice mode', async () => {
+    await writePref('followPace', 'voice')
+    const { result } = renderHook(() => useFollowPace())
+    await waitFor(() => expect(result.current.pace).toBe('voice'))
+  })
+
   it.each(['80', '60', '100'])('falls back to 225 for an invalid or old stored value %s', async (stored) => {
     await writePref('followPace', stored)
     const { result } = renderHook(() => useFollowPace())
     await waitFor(() => expect(result.current.pace).toBe(225))
   })
 
-  it('cycles 225 -> 300 -> 150 -> 225 and persists each value', async () => {
+  it("cycles 225 -> 300 -> 150 -> 'voice' -> 225 and persists each value", async () => {
     const { result } = renderHook(() => useFollowPace())
     await waitFor(() => expect(result.current.pace).toBe(225))
     act(() => result.current.cycle())
@@ -34,6 +40,9 @@ describe('useFollowPace', () => {
     await waitFor(async () => expect(await readPref('followPace')).toBe('300'))
     act(() => result.current.cycle())
     expect(result.current.pace).toBe(150)
+    act(() => result.current.cycle())
+    expect(result.current.pace).toBe('voice')
+    await waitFor(async () => expect(await readPref('followPace')).toBe('voice'))
     act(() => result.current.cycle())
     expect(result.current.pace).toBe(225)
     await waitFor(async () => expect(await readPref('followPace')).toBe('225'))
