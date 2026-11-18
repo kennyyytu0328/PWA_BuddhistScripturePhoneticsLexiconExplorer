@@ -84,12 +84,12 @@ describe('useFollowAlong', () => {
   it('pace change applies from the next beat with a single timer', () => {
     const { result, rerender } = setup(225)
     act(() => result.current.play(COVER_PAGE))
-    act(() => void vi.advanceTimersByTime(130))
+    act(() => void vi.advanceTimersByTime(40))
     rerender({ pace: 300 })
     expect(vi.getTimerCount()).toBe(1)
-    act(() => void vi.advanceTimersByTime(100)) // t = 230
+    act(() => void vi.advanceTimersByTime(205)) // t = 245
     expect(result.current.cursor).toBe(0)
-    act(() => void vi.advanceTimersByTime(50)) // t = 280: old beat (266.67ms) completes
+    act(() => void vi.advanceTimersByTime(35)) // t = 280: old beat (266.67ms) completes
     expect(result.current.cursor).toBe(1)
     expect(vi.getTimerCount()).toBe(1)
     const second = ms(300, 1)

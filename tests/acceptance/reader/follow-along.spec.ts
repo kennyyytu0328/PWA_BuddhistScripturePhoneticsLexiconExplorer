@@ -368,12 +368,12 @@ test.describe('REQ-RDR-032 controls', () => {
     await boot(page) // 中: 266.67ms per beat
     await start(page)
     expect(await cursor(page)).toBe(0)
-    await page.clock.runFor(130)
+    await page.clock.runFor(40)
     await paceBtn(page).click() // 中 → 快 (200ms per beat)
     await expect(paceBtn(page)).toHaveText('快')
-    await page.clock.runFor(100) // t = 230: first beat (old speed) still running
+    await page.clock.runFor(205) // t = 245: first beat (old speed) still running
     expect(await cursor(page)).toBe(0)
-    await page.clock.runFor(50) // t = 280: first beat done at the old 266.67ms, now in beat 2
+    await page.clock.runFor(35) // t = 280: first beat done at the old 266.67ms, now in beat 2
     expect(await cursor(page)).toBe(1)
     await page.clock.runFor(130) // t = 410: beat 2 lasts 200ms at the new speed (ends at ~467)
     expect(await cursor(page)).toBe(1)
