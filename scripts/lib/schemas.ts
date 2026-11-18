@@ -55,3 +55,14 @@ export const IastFileSchema = z.looseObject({
 export const LockFileSchema = z.looseObject({
   segments: z.record(z.string(), z.array(z.looseObject({ t: z.string(), py: z.string() }))),
 })
+
+const seconds = z.number().nonnegative()
+
+// data/voice-timings.json（REQ-DAT-022）：原音逐字起始時間，秒
+export const VoiceTimingsSchema = z.looseObject({
+  audio: nonEmpty,
+  duration: z.number().positive(),
+  title: z.strictObject({ start: seconds, end: seconds }),
+  chars: z.array(seconds).min(1),
+  review: z.looseObject({ voice: z.boolean() }),
+})

@@ -6,10 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build:data": "tsx scripts/build-data.ts",
+    "build:voice": "tsx scripts/build-voice.ts",
     "build:fonts": "tsx scripts/build-fonts.ts",
     "build:icons": "tsx scripts/build-icons.ts",
     "make:voice": "tsx scripts/make-voice-timings.ts --mantra-override data-sources/voice/mantra-override.json",
-    "build": "tsx scripts/check-review.ts && pnpm build:data && pnpm build:fonts && pnpm build:icons && tsc -b && vite build",
+    "build": "tsx scripts/check-review.ts && pnpm build:data && pnpm build:voice --release && pnpm build:fonts && pnpm build:icons && tsc -b && vite build",
     "test": "vitest run",
     "lint": "oxlint",
     "preview": "vite preview"
