@@ -10,7 +10,7 @@ import {
   PACE_LABEL,
   startIndex,
 } from './followAlong'
-import { sutraSegments } from './sutraFixture'
+import { sutraSegments } from '../test/sutraFixture'
 import { isPunct } from './types'
 
 const ast = { segments: sutraSegments }

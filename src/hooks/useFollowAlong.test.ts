@@ -2,7 +2,7 @@ import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { COVER_PAGE } from '../lib/cover'
 import { beatMs, buildTimeline, type Pace } from '../lib/followAlong'
-import { sutraSegments } from '../lib/sutraFixture'
+import { sutraSegments } from '../test/sutraFixture'
 import { useFollowAlong } from './useFollowAlong'
 
 const ast = { segments: sutraSegments }
@@ -90,9 +90,40 @@ describe('useFollowAlong', () => {
     expect(result.current.cursor).toBe(1)
   })
 
+  it('a late timer does not override a pause queued in the same batch', () => {
+    const { result } = setup()
+    act(() => result.current.play(COVER_PAGE))
+    act(() => {
+      result.current.pause()
+      vi.advanceTimersByTime(ms(100, 0))
+    })
+    expect(result.current.playing).toBe(false)
+    expect(result.current.cursor).toBe(0)
+  })
+
+  it('goes idle when a shorter timeline leaves the cursor past its end', () => {
+    const short = buildTimeline(sutraSegments.slice(0, 1))
+    const { result, rerender } = renderHook(({ t }) => useFollowAlong(t, 100), { initialProps: { t: timeline } })
+    act(() => result.current.play('s9'))
+    rerender({ t: short })
+    expect(result.current.cursor).toBeNull()
+    expect(result.current.playing).toBe(false)
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('under StrictMode keeps a single timer and advances once per beat', () => {
+    const { result } = renderHook(() => useFollowAlong(timeline, 100), { reactStrictMode: true })
+    act(() => result.current.play(COVER_PAGE))
+    expect(vi.getTimerCount()).toBe(1)
+    act(() => void vi.advanceTimersByTime(ms(100, 0)))
+    expect(result.current.cursor).toBe(1)
+    expect(vi.getTimerCount()).toBe(1)
+  })
+
   it('ends with a null cursor after the last step beats elapse', () => {
     const { result } = setup()
     const last = timeline.steps.length - 1
+    expect(timeline.steps[0].beats).toBe(1)
     const lastSegment = timeline.steps[last].segmentId
     act(() => result.current.play(lastSegment))
     for (let i = timeline.startOf[lastSegment]; i <= last; i++) act(() => void vi.advanceTimersByTime(ms(100, i)))

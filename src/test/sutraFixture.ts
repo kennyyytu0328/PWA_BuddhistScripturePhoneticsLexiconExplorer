@@ -1,5 +1,5 @@
 import raw from '../../data/heart-sutra.json?raw'
-import type { Segment } from './types'
+import type { Segment } from '../lib/types'
 
 interface SourceToken {
   t: string
