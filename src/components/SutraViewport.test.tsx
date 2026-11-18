@@ -226,7 +226,7 @@ describe('SutraViewport', () => {
         expect(cancel).toHaveBeenCalled()
       })
 
-      it('settles by layout position: transformed (old-page) rects do not hide the landing on the target', () => {
+      it('attributes the settle to the follow page by layout position: transformed (old-page) rects do not hide the landing', () => {
         const onPageChange = vi.fn()
         const { rerender } = render(<SutraViewport {...props} followSegment="s1" onPageChange={onPageChange} />)
         rerender(<SutraViewport {...props} followSegment="s2" onPageChange={onPageChange} />)
@@ -244,7 +244,7 @@ describe('SutraViewport', () => {
         expect(onPageChange).toHaveBeenCalledWith('s2', 'auto')
       })
 
-      it('a turn that moves nothing leaves no stale auto target: a later swipe is a user swipe', () => {
+      it('a turn that moves nothing is settled at once: a later swipe to another page is a user swipe', () => {
         const onPageChange = vi.fn()
         // layout already has the cover at the edge, so nothing moves and no scrollend would follow
         vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {

@@ -70,7 +70,6 @@ export function SutraViewport({
   const ref = useRef<HTMLElement>(null)
   const lastSegment = useRef(initialSegment ?? COVER_PAGE)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const autoTarget = useRef<string | null>(null)
   const turning = useRef<Animation[]>([])
   const previousFollow = useRef(followSegment)
 
@@ -104,8 +103,7 @@ export function SutraViewport({
 
   const settle = () => {
     const id = currentSegment(ref.current!)
-    const auto = id === autoTarget.current || id === followSegment
-    autoTarget.current = null
+    const auto = id === followSegment
     if (!id || id === lastSegment.current) return
     lastSegment.current = id
     onPageChange?.(id, auto ? 'auto' : 'user')
@@ -123,14 +121,13 @@ export function SutraViewport({
     const changed = previousFollow.current !== followSegment
     previousFollow.current = followSegment
     if (!changed || !followSegment) return
-    if (followSegment === lastSegment.current && autoTarget.current === null) return
+    if (followSegment === lastSegment.current) return
     const target = pagesOf(ref.current!).find((page) => page.dataset.segment === followSegment)
     if (!target) return
     turning.current.forEach((a) => a.cancel())
-    autoTarget.current = followSegment
     turning.current = turnToPage(ref.current!, target)
     // The instant scroll has already moved layout (the slide is only a transform), so the landing can be resolved now;
-    // a turn that moved nothing fires no scrollend and would otherwise leave autoTarget stale.
+    // a turn that moved nothing fires no scrollend, so it is settled here.
     settle()
     // Runs only when followSegment changes (settle reads the latest props through the render it was created in).
     // oxlint-disable-next-line react-hooks/exhaustive-deps

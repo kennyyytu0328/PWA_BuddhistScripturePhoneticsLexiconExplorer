@@ -124,12 +124,36 @@ describe('useFollowAlong', () => {
 
   it('goes idle when a shorter timeline leaves the cursor past its end', () => {
     const short = buildTimeline(sutraSegments.slice(0, 1))
-    const { result, rerender } = renderHook(({ t }) => useFollowAlong(t, 100), { initialProps: { t: timeline } })
+    const seen: Array<number | null> = []
+    const { result, rerender } = renderHook(
+      ({ t }) => {
+        const r = useFollowAlong(t, 100)
+        seen.push(r.cursor)
+        return r
+      },
+      { initialProps: { t: timeline } },
+    )
     act(() => result.current.play('s9'))
+    seen.length = 0
     rerender({ t: short })
+    // no render, including the one that detects the overrun, returns an out-of-range cursor
+    expect(seen.every((c) => c === null || c < short.steps.length)).toBe(true)
+    expect(seen[0]).toBeNull()
     expect(result.current.cursor).toBeNull()
     expect(result.current.playing).toBe(false)
     expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('pause while idle keeps the same state (no re-render)', () => {
+    let renders = 0
+    const { result } = renderHook(() => {
+      renders++
+      return useFollowAlong(timeline, 100)
+    })
+    const before = renders
+    act(() => result.current.pause())
+    expect(renders).toBe(before)
+    expect(result.current.playing).toBe(false)
   })
 
   it('under StrictMode keeps a single timer and advances once per beat', () => {

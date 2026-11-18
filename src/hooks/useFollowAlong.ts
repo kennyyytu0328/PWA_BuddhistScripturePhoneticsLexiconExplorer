@@ -19,9 +19,11 @@ export function useFollowAlong(timeline: Timeline, pace: Pace) {
   useEffect(() => {
     paceRef.current = pace
   }, [pace])
-  const { cursor, playing } = state
-  // A shorter timeline arrived while the cursor was past its end: go idle (adjusting state during render).
-  if (cursor !== null && cursor >= timeline.steps.length) setState(IDLE)
+  // A shorter timeline arrived while the cursor was past its end: go idle (adjusting state during render)
+  // and hand callers an idle state in this same render, so no one indexes the timeline out of range.
+  const outOfRange = state.cursor !== null && state.cursor >= timeline.steps.length
+  if (outOfRange) setState(IDLE)
+  const { cursor, playing } = outOfRange ? IDLE : state
 
   // The beats chain themselves from the timer callback instead of waiting for a render per beat, so a long
   // stretch of elapsed time (a throttled tab, a fake clock jumping ahead) still moves the cursor the right distance.
@@ -55,7 +57,7 @@ export function useFollowAlong(timeline: Timeline, pace: Pace) {
     [timeline],
   )
 
-  const pause = useCallback(() => setState((current) => ({ ...current, playing: false })), [])
+  const pause = useCallback(() => setState((current) => (current.playing ? { ...current, playing: false } : current)), [])
 
   useEffect(() => {
     if (!playing) return
