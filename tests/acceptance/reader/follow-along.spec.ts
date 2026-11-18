@@ -33,7 +33,7 @@ import {
 const STONE_400: [number, number, number, number] = [168, 162, 158, 1] // #a8a29e
 const STONE_200: [number, number, number, number] = [231, 229, 228, 1] // #e7e5e4
 const EXTRA_BEATS: Record<string, number> = { '，': 1, '：': 1, '。': 2, '；': 2, '！': 2 }
-const PACES = { 慢: 60, 中: 100, 快: 150 } as const
+const PACES = { 慢: 150, 中: 225, 快: 300 } as const
 type PaceLabel = keyof typeof PACES
 const beatMs = (label: PaceLabel): number => 60000 / PACES[label]
 
@@ -323,9 +323,9 @@ test.describe('REQ-RDR-032 controls', () => {
     await expect(toggleBtn(page)).toHaveAttribute('aria-label', '開始隨誦')
   })
 
-  test('[REQ-RDR-032] follow-pace shows 中 / 每分鐘 100 字 by default and cycles 中 → 快 → 慢 → 中', async ({ page }) => {
+  test('[REQ-RDR-032] follow-pace shows 中 / 每分鐘 225 字 by default and cycles 中 → 快 → 慢 → 中', async ({ page }) => {
     await gotoReader(page)
-    const expected: [string, number][] = [['中', 100], ['快', 150], ['慢', 60], ['中', 100]]
+    const expected: [string, number][] = [['中', 225], ['快', 300], ['慢', 150], ['中', 225]]
     for (const [i, [text, n]] of expected.entries()) {
       if (i > 0) await paceBtn(page).click()
       await expect(paceBtn(page)).toHaveText(text)
@@ -333,51 +333,51 @@ test.describe('REQ-RDR-032 controls', () => {
     }
   })
 
-  test('[REQ-RDR-032] the pace is saved in IndexedDB prefs under followPace as the strings "150" / "60" / "100" and restored after reload', async ({ page }) => {
+  test('[REQ-RDR-032] the pace is saved in IndexedDB prefs under followPace as the strings "300" / "150" / "225" and restored after reload', async ({ page }) => {
     await gotoReader(page)
-    const steps: [string, string][] = [['快', '150'], ['慢', '60'], ['中', '100']]
+    const steps: [string, string][] = [['快', '300'], ['慢', '150'], ['中', '225']]
     for (const [text, value] of steps) {
       await paceBtn(page).click()
       await expect(paceBtn(page)).toHaveText(text)
       await expect.poll(async () => ((await readPref(page, 'followPace')) as { value?: unknown } | null)?.value).toBe(value)
     }
     await paceBtn(page).click() // 快
-    await expect.poll(async () => ((await readPref(page, 'followPace')) as { value?: unknown } | null)?.value).toBe('150')
+    await expect.poll(async () => ((await readPref(page, 'followPace')) as { value?: unknown } | null)?.value).toBe('300')
     await page.reload()
     await expect(page.getByTestId('sutra-page')).toHaveCount(9)
     await expect(paceBtn(page)).toHaveText('快')
-    await expect(paceBtn(page)).toHaveAttribute('aria-label', '隨誦速度：每分鐘 150 字')
+    await expect(paceBtn(page)).toHaveAttribute('aria-label', '隨誦速度：每分鐘 300 字')
   })
 
-  test('[REQ-RDR-032] a stored followPace of "60" is restored as 慢', async ({ page }) => {
-    await seedFollowPace(page, '60')
+  test('[REQ-RDR-032] a stored followPace of "150" is restored as 慢', async ({ page }) => {
+    await seedFollowPace(page, '150')
     await gotoReader(page)
     await expect(paceBtn(page)).toHaveText('慢')
   })
 
-  for (const bad of ['999', 'fast', '', 100, null]) {
-    test(`[REQ-RDR-032] an invalid stored followPace (${JSON.stringify(bad)}) falls back to 100 (中)`, async ({ page }) => {
+  for (const bad of ['999', 'fast', '', 100, 60, null]) {
+    test(`[REQ-RDR-032] an invalid stored followPace (${JSON.stringify(bad)}) falls back to 225 (中)`, async ({ page }) => {
       await seedFollowPace(page, bad)
       await gotoReader(page)
       await expect(paceBtn(page)).toHaveText('中')
-      await expect(paceBtn(page)).toHaveAttribute('aria-label', '隨誦速度：每分鐘 100 字')
+      await expect(paceBtn(page)).toHaveAttribute('aria-label', '隨誦速度：每分鐘 225 字')
     })
   }
 
   test('[REQ-RDR-032] changing the pace while playing takes effect from the next beat', async ({ page }) => {
-    await boot(page) // 中: 600ms per beat
+    await boot(page) // 中: 266.67ms per beat
     await start(page)
     expect(await cursor(page)).toBe(0)
-    await page.clock.runFor(300)
-    await paceBtn(page).click() // 中 → 快 (400ms per beat)
+    await page.clock.runFor(130)
+    await paceBtn(page).click() // 中 → 快 (200ms per beat)
     await expect(paceBtn(page)).toHaveText('快')
-    await page.clock.runFor(250) // t = 550: first beat (old speed) still running
+    await page.clock.runFor(100) // t = 230: first beat (old speed) still running
     expect(await cursor(page)).toBe(0)
-    await page.clock.runFor(100) // t = 650: first beat done at the old 600ms, now in beat 2
+    await page.clock.runFor(50) // t = 280: first beat done at the old 266.67ms, now in beat 2
     expect(await cursor(page)).toBe(1)
-    await page.clock.runFor(300) // t = 950: beat 2 lasts 400ms at the new speed (ends at 1000)
+    await page.clock.runFor(130) // t = 410: beat 2 lasts 200ms at the new speed (ends at ~467)
     expect(await cursor(page)).toBe(1)
-    await page.clock.runFor(100) // t = 1050
+    await page.clock.runFor(100) // t = 510
     expect(await cursor(page)).toBe(2)
   })
 })
@@ -402,24 +402,24 @@ test.describe('REQ-RDR-033 beats and colours', () => {
     expect(await cursor(page)).toBe(0)
   })
 
-  test('[REQ-RDR-033] at 中 the first character of s1 is current, and turns read after 600ms', async ({ page }) => {
+  test('[REQ-RDR-033] at 中 the first character of s1 is current, and turns read after one 中 beat (266.67ms)', async ({ page }) => {
     await boot(page)
     await start(page)
     expect(await cursor(page)).toBe(0)
-    await page.clock.runFor(550)
+    await page.clock.runFor(230)
     expect(await cursor(page)).toBe(0)
     await page.clock.runFor(100)
     expect(await cursor(page)).toBe(1)
     expect((await followStates(page))[0]).toBe('read')
   })
 
-  for (const [label, ms] of [['慢', 1000], ['快', 400]] as const) {
+  for (const [label, ms] of [['慢', 400], ['快', 200]] as const) {
     test(`[REQ-RDR-033] at ${label} a character stays ${ms}ms`, async ({ page }) => {
       await boot(page, { pace: label })
       await start(page)
-      await page.clock.runFor(ms - 60)
+      await page.clock.runFor(ms - 40)
       expect(await cursor(page)).toBe(0)
-      await page.clock.runFor(120)
+      await page.clock.runFor(80)
       expect(await cursor(page)).toBe(1)
     })
   }
