@@ -662,6 +662,133 @@ test.describe('REQ-RDR-034 auto page turn', () => {
 })
 
 // ===========================================================================
+// REQ-RDR-034 pages wider than the window (Q-RDR-054)
+// ===========================================================================
+interface WideGeo { w: number; pageLeft: number; pageRight: number; cellLeft: number; cellRight: number; sliding: boolean }
+
+/** Geometry of the cursor cell and its page; `sliding` = a fold animation is still running on a sutra page. */
+const wideGeo = (page: Page, seg: string): Promise<WideGeo> =>
+  page.evaluate((s) => {
+    const p = document.querySelector(`[data-testid="sutra-page"][data-segment="${s}"]`)!
+    const c = document.querySelector('[data-follow="current"]')!
+    const pr = p.getBoundingClientRect()
+    const cr = c.getBoundingClientRect()
+    const sliding = document
+      .getAnimations()
+      .some((a) => a.playState === 'running' && (a.effect as KeyframeEffect | null)?.target instanceof Element &&
+        ((a.effect as KeyframeEffect).target as Element).matches('[data-testid="sutra-page"]'))
+    return { w: document.documentElement.clientWidth, pageLeft: pr.left, pageRight: pr.right, cellLeft: cr.left, cellRight: cr.right, sliding }
+  }, seg)
+
+/** Distance from the page's right edge to the right edge of its first character (the first column's inset). */
+const firstColumnInset = (page: Page, seg: string): Promise<number> =>
+  page.evaluate((s) => {
+    const p = document.querySelector(`[data-testid="sutra-page"][data-segment="${s}"]`)!
+    return p.getBoundingClientRect().right - p.querySelector('.cell')!.getBoundingClientRect().right
+  }, seg)
+
+/** Walk every character of `seg` (on the frozen clock) and check the cursor cell is brought into view each time. */
+async function walkWidePage(page: Page, seg: string, minRatio: number): Promise<void> {
+  await boot(page, { progress: seg, pace: '快' })
+  const { w } = await viewportSize(page)
+  const width = await pageEl(page, seg).evaluate((el) => el.getBoundingClientRect().width)
+  expect(width, `page ${seg} is wider than ${minRatio}x the window`).toBeGreaterThan(minRatio * w)
+  const inset = await firstColumnInset(page, seg)
+  await start(page)
+  const B = beatMs('快')
+  const first = SEG_START[seg]
+  const count = CELL_OF_CHAR.filter((_, i) => SEG_OF_CHAR(i) === seg).length
+  const at = timeAxis(page)
+  let slides = 0
+  let before = await wideGeo(page, seg)
+  for (let i = first; i < first + count; i++) {
+    await at((PRE[i] - PRE[first]) * B + 20)
+    expect(await cursor(page)).toBe(i)
+    // The clock is frozen here, so the cursor stays on i while the slide (real time) finishes.
+    let g = await wideGeo(page, seg)
+    const t0 = Date.now()
+    while ((g.sliding || g.cellLeft < -1.5 || g.cellRight > g.w + 1.5) && Date.now() - t0 < 2000) {
+      await page.waitForTimeout(50)
+      g = await wideGeo(page, seg)
+    }
+    expect(g.cellLeft, `character ${i}: cell inside the window (left)`).toBeGreaterThanOrEqual(-1.5)
+    expect(g.cellRight, `character ${i}: cell inside the window (right)`).toBeLessThanOrEqual(g.w + 1.5)
+    expect(g.pageLeft, `character ${i}: page still covers the window (left)`).toBeLessThanOrEqual(1.5)
+    expect(g.pageRight, `character ${i}: page still covers the window (right)`).toBeGreaterThanOrEqual(g.w - 1.5)
+    if (Math.abs(g.pageRight - before.pageRight) > 1.5) {
+      slides++
+      const rightmost = Math.abs(g.cellRight - (g.w - inset)) <= 1.5
+      const clamped = Math.abs(g.pageLeft) <= 1.5
+      expect(rightmost || clamped, `character ${i}: its column is the rightmost one, or the page's left edge meets the window's`).toBe(true)
+    }
+    await expect(toggleBtn(page)).toHaveText('停')
+    before = g
+  }
+  expect(slides, 'the fold slid at least once inside the wide page').toBeGreaterThan(0)
+  // Snapping must not pull the fold back to the head of the page, and the reading progress stays on this page.
+  await page.waitForTimeout(400)
+  const end = await wideGeo(page, seg)
+  expect(Math.abs(end.pageRight - before.pageRight)).toBeLessThanOrEqual(1.5)
+  await expect
+    .poll(async () => {
+      await page.clock.runFor(10)
+      return ((await readPref(page, 'progress')) as { value?: unknown } | null)?.value
+    }, { timeout: 3000 })
+    .toBe(seg)
+}
+
+test.describe('REQ-RDR-034 pages wider than the window', () => {
+  test.describe('360x320 viewport', () => {
+    test.use({ viewport: { width: 360, height: 320 } })
+
+    test('[REQ-RDR-034] when the cursor reaches a column outside the window, the fold slides so that column is the rightmost in view, without pausing', async ({ page }) => {
+      test.setTimeout(90_000)
+      await walkWidePage(page, 's4', 1.2)
+    })
+  })
+
+  test.describe('360x200 viewport (page wider than twice the window)', () => {
+    test.use({ viewport: { width: 360, height: 200 } })
+
+    test('[REQ-RDR-034] a page more than twice as wide as the window is followed to its last column without pausing or jumping to the next page', async ({ page }) => {
+      test.setTimeout(120_000)
+      await walkWidePage(page, 's6', 2)
+    })
+  })
+
+  test.describe('360x320 viewport, prefers-reduced-motion: reduce', () => {
+    test.use({ viewport: { width: 360, height: 320 }, reducedMotion: 'reduce' })
+
+    test('[REQ-RDR-034] with reduced motion the column is in view within 100ms of the cursor arriving', async ({ page }) => {
+      await boot(page, { progress: 's4', pace: '快' })
+      const { w } = await viewportSize(page)
+      await start(page)
+      const B = beatMs('快')
+      const first = SEG_START.s4
+      const at = timeAxis(page)
+      // The first character of s4 that starts outside the window before playback.
+      let target = -1
+      for (let i = first; SEG_OF_CHAR(i) === 's4'; i++) {
+        // .cell holds characters only (punctuation is [data-testid="punct"]), so its index is the character index.
+        const left = await page.locator('.cell').nth(i).evaluate((el) => el.getBoundingClientRect().left)
+        if (left < -1.5) {
+          target = i
+          break
+        }
+      }
+      expect(target, 'a character of s4 starts outside the window').toBeGreaterThan(first)
+      await at((PRE[target] - PRE[first]) * B + 20)
+      expect(await cursor(page)).toBe(target)
+      await page.clock.runFor(50)
+      await page.waitForTimeout(50)
+      const g = await wideGeo(page, 's4')
+      expect(g.cellLeft).toBeGreaterThanOrEqual(-1.5)
+      expect(g.cellRight).toBeLessThanOrEqual(w + 1.5)
+    })
+  })
+})
+
+// ===========================================================================
 // REQ-RDR-035 pause and resume
 // ===========================================================================
 test.describe('REQ-RDR-035 pause and resume', () => {
