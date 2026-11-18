@@ -10,6 +10,7 @@
   - **名相解讀抽屜**：點擊名相 → 微震動 → 高亮 → 底部 Bottom Sheet 顯示辭典釋義；不用 Popover。
   - **音標切換**：注音 → 拼音 → 梵文(IAST) → 無音標，以 `<ruby>` 呈現。
   - **隨誦光標**（2026-11-17 定案）：按「誦」後光標依每分鐘 150／225／300 字（慢／中／快，預設 225，存入 Dexie；2026-11-18 由 60／100／150 調快）逐字前進；字後接逗號類多停 1 拍、句號類多停 2 拍。控制鍵為底部右側兩顆 44×44 圓鈕（速度「慢／中／快」、播放「誦」／暫停「停」），與音標膠囊同一水平線。隨誦進行中（含暫停）未誦字為 stone-400、已誦與當前字為 stone-200，當前字左側（不壓到右側 `<rt>`）有 1px 琥珀細線；畫面頂緣 1px stone-400 進度線由右向左增長。頁尾自動翻頁（zen 緩動，`prefers-reduced-motion` 時直接跳頁）；頁面寬於螢幕（如系統字級放大）時，光標走到畫面外的直行即滑動經摺使該行成為最右一行，不捲過該頁左緣（2026-11-18 定案）。開名相抽屜、開白話參考、手動滑到別頁、App 切到背景皆暫停；按「誦」時所見頁即光標所在頁則續誦，否則從所見頁頁首開始，在封面則翻到經文第 1 頁開始。最後一字走完即結束：顏色回復、進度線消失，停在最後一頁。
+  - **原音隨誦**（2026-11-18 定案）：速度鍵輪替 中 → 快 → 慢 → **聲** → 中（Dexie 值 `"voice"`）。「聲」時按「誦」播放全經錄音（luvvoice.com 產生），光標依 `data/voice-timings.json` 的逐字起始時間跟著聲音走，配色、進度線、翻頁、暫停與續誦同計時模式；續誦時錄音移到光標字。在封面按「誦」先停在封面唸經題（不標光標、無進度線），經文第一字開始時翻到 s1。播放中進出「聲」即暫停；錄音無法播放時同按「停」。
   - **PWA**：可安裝（standalone）、100% 離線、螢幕常亮（Wake Lock）、觸覺回饋（Vibration）。
 
 ## 2. 技術選型（已定案）
@@ -48,14 +49,19 @@
 data/heart-sutra.json                 # 人工校訂的經文主檔（唯一真實來源）
 data/readings.lock.json               # 已審閱的全經讀音快照（建置比對用）
 data/iast.json                        # 梵文 IAST 對照表（已審定）
+data/voice-timings.json               # 原音逐字時間碼（已審閱資料；pnpm make:voice 產生、人工試聽）
 review/                               # 讀音、白話審閱報告
 data-sources/dfb/…/dingfubao.xml      # DFB TEI 原始檔（31,366 條）
 data-sources/cbeta/T08n0251.txt       # CBETA 原文（建置期比對用，不隨 App 散布；不進 git repo，見 THIRD_PARTY_NOTICES.md）
 data-sources/legacy/sutra-db.v0.json  # 舊版資料，僅供參考，不再使用
+data-sources/voice/sutra_speech.{mp3,srt}  # 全經錄音與字幕（luvvoice.com，見 THIRD_PARTY_NOTICES.md）
+scripts/make-voice-timings.ts         # 時間碼產生（pnpm make:voice，一次性，產物須人工試聽）
+scripts/build-voice.ts                # 時間碼驗證與發佈（pnpm build:voice）
 scripts/build-data.ts                 # 建置腳本（pnpm build:data）
 public/data/heart-sutra.ast.json      # 建置產物：含逐字音標
 public/data/lexicon.dfb.json          # 建置產物：僅含經文引用到的 DFB 條目
 public/data/gaiji/                    # 建置產物：釋義用到的 DFB 造字 PNG
+public/data/voice.{mp3,-timings.json} # 建置產物：錄音與時間碼（build:voice）
 scripts/build-icons.ts                # 圖示產生腳本（pnpm build:icons）
 public/{pwa-*.png,apple-touch-icon.png,favicon.svg}  # 建置產物：App 圖示與 favicon（「心」字）
 docs/spec/data/                       # data 單元需求登錄表與決議（spec-flow）
@@ -148,7 +154,7 @@ docs/spec/data/                       # data 單元需求登錄表與決議（sp
 
 Workbox 快取分層：
 1. **App Shell 與字型**（Precache / CacheFirst）：JS、CSS、Noto Serif TC 直排子集字型、介面標籤字型子集（§6.5）。
-2. **經文與辭典**（Precache）：`heart-sutra.ast.json`、`lexicon.dfb.json` 於安裝時預快取。
+2. **經文與辭典**（Precache）：`heart-sutra.ast.json`、`lexicon.dfb.json`、原音錄音 `voice.mp3` 與時間碼 `voice-timings.json` 於安裝時預快取。
 3. **未來擴充經典／辭典**（StaleWhileRevalidate）：首次查詢時抓取並存入 CacheStorage。
 
 ## 6. 行動端版面

@@ -1,5 +1,5 @@
 # 需求登錄表 — pwa 單元
-> 狀態：已確認（2026-10-20，使用者確認；Q-PWA-001～008、010 採 A，009 採 C，已併入）。
+> 狀態：已確認（2026-10-20，使用者確認；Q-PWA-001～008、010 採 A，009 採 C，已併入；2026-11-18 依 Q-PWA-011 修改 REQ-PWA-007）。
 > 來源：`CLAUDE.md`（行號依 commit d77c770 版本）；依賴單元 `data`（產物：REQ-DAT-002 AST、003 辭典、012 造字 PNG）、`reader`（REQ-RDR-004 全經呈現、014 名相抽屜、017 出處、022 字型打包、029 載入失敗）。
 > 範圍：§1 的 PWA 項（可安裝、100% 離線）、§5（manifest、Workbox 快取分層）、§8.3（離線驗收）；另依 2026-10-20 使用者決議納入圖示與 favicon。測試覆蓋率沿用 REQ-RDR-028，不另登錄。
 
@@ -79,6 +79,7 @@
   - When service worker 安裝完成（頁面尚未操作任何名相）
   - Then 預快取包含 `/data/heart-sutra.ast.json`、`/data/lexicon.dfb.json`
   - And 預快取包含 `/data/gaiji/` 下全部 PNG（Q-PWA-001）
+  - And 預快取包含 `/data/voice.mp3`、`/data/voice-timings.json`（原音隨誦，REQ-DAT-022、REQ-RDR-038；2026-11-18 依 Q-PWA-011 新增）
 - 狀態：確認
 
 ### REQ-PWA-008 第三層：擴充經典／辭典

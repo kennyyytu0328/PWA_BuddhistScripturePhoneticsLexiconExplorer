@@ -164,3 +164,12 @@
 ### Q-DAT-022 已實作但未登錄的行為
 - 問題：釋義含 `<g>` 以外元素即中止、漢字標為 punct 即中止、CBETA 檔 `#` 行為註解、AST 標點 token 形狀，皆未寫入登錄表。
 - 回覆：補入 REQ-DAT-002、005、011（2026-10-17）。
+
+### Q-DAT-023 原音時間碼的驗證與發佈
+- 關聯：REQ-DAT-022；Q-RDR-055
+- 問題：原音隨誦需要逐字時間碼與錄音；設計稿原寫由 `pnpm build:data` 驗證並複製。
+- 選項：
+  - A（建議）：另立 `pnpm build:voice` 驗證並發佈，`pnpm build` 串接之；`build:data` 的產物、凍結測試與 `check-review.ts` 不動。
+  - B：併入 `build:data`。
+- 回覆：A（2026-11-18，實作計畫確認時採用）。`review.voice` 由 `build:voice --release` 擋下正式建置。
+

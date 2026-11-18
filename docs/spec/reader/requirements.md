@@ -1,5 +1,5 @@
 # 需求登錄表 — reader 單元
-> 狀態：已確認（2026-10-17，使用者確認；Q-RDR-001～015、017～032 採 A，016 採 B，皆已併入；REQ-RDR-029 於 2026-10-19 依 Q-RDR-018 新增；2026-10-20 實機試看後依 Q-RDR-036～038 修改 REQ-RDR-002、003、008、011，新增 REQ-RDR-030；2026-10-21 依 Q-RDR-042 新增 REQ-RDR-031；2026-11-17 依 Q-RDR-049 新增 REQ-RDR-032～037，修改 REQ-RDR-020、021；2026-11-18 依 Q-RDR-051 修改 REQ-RDR-032；同日依 Q-RDR-053 調快速度）。
+> 狀態：已確認（2026-10-17，使用者確認；Q-RDR-001～015、017～032 採 A，016 採 B，皆已併入；REQ-RDR-029 於 2026-10-19 依 Q-RDR-018 新增；2026-10-20 實機試看後依 Q-RDR-036～038 修改 REQ-RDR-002、003、008、011，新增 REQ-RDR-030；2026-10-21 依 Q-RDR-042 新增 REQ-RDR-031；2026-11-17 依 Q-RDR-049 新增 REQ-RDR-032～037，修改 REQ-RDR-020、021；2026-11-18 依 Q-RDR-051 修改 REQ-RDR-032；同日依 Q-RDR-053 調快速度；同日依 Q-RDR-055 修改 REQ-RDR-032、035，新增 REQ-RDR-038、039）。
 > 來源：`CLAUDE.md`（行號依 2026-10-17 版本，commit 2279ebe）；依賴單元 `data`：產物格式見 `docs/spec/data/requirements.md` 的 REQ-DAT-002（AST）、003（辭典）、004（授權）、011／012（釋義與造字）、016（IAST）、019（無 lex 不可點擊）。
 > 範圍：§1 核心體驗、§4-2（UI 部分）、§6、§7、§8.2、8.4、8.5、8.6。PWA 安裝與離線（§5、§8.3）屬後續 `pwa` 單元。
 
@@ -390,11 +390,14 @@
   - And 360×640 與 Pixel 7 下，兩鍵不與 `phonetic-toggle`、`vernacular-toggle`、`swipe-hint` 重疊
   - And `follow-toggle` 未播放時文字「誦」、`aria-pressed="false"`、`aria-label="開始隨誦"`；播放中文字「停」、`aria-pressed="true"`、`aria-label="暫停隨誦"`
   - And `follow-pace` 文字「慢」「中」「快」分別對應每分鐘 150、225、300 字，`aria-label` 為「隨誦速度：每分鐘 N 字」（N 為 150／225／300；2026-11-18 依 Q-RDR-053 修改）
+  - And `follow-pace` 第四段文字「聲」，`aria-label` 為「隨誦速度：原音朗讀」（原音隨誦，REQ-RDR-038；2026-11-18 依 Q-RDR-055 新增）
   - When 連續點擊 `follow-pace`
-  - Then 速度依 中 → 快 → 慢 → 中 輪替
-  - And 選擇存於 IndexedDB `sutraflow/prefs` 鍵 `followPace`，值為字串 `"150"`／`"225"`／`"300"`；重新載入後還原；無紀錄或值無效（含舊版的 `"60"`、`"100"`）時為 225（中）
-  - When 播放中改變速度
+  - Then 速度依 中 → 快 → 慢 → 聲 → 中 輪替（2026-11-18 依 Q-RDR-055 修改）
+  - And 選擇存於 IndexedDB `sutraflow/prefs` 鍵 `followPace`，值為字串 `"150"`／`"225"`／`"300"`／`"voice"`；重新載入後還原；無紀錄或值無效（含舊版的 `"60"`、`"100"`）時為 225（中）
+  - When 播放中在慢／中／快之間改變速度
   - Then 自下一字起以新速度前進：光標所在字剩餘的拍數沿用原速度（2026-11-18 依 Q-RDR-051 修改）
+  - When 播放中改到「聲」或由「聲」改到其他速度
+  - Then 隨誦暫停並保留光標（REQ-RDR-039）
 - 狀態：確認
 
 ### REQ-RDR-033 節拍與逐字配色
@@ -443,7 +446,7 @@
   - When 按「誦」
   - Then 所見頁為光標所在頁 → 從光標處續誦
   - And 所見頁為其他經文頁 → 光標移到所見頁第一字開始
-  - And 所見為封面 → 經摺翻到 s1，從 s1 第一字開始
+  - And 所見為封面 → 經摺翻到 s1，從 s1 第一字開始（速度為「聲」時改依 REQ-RDR-038 經題階段：先停在封面唸經題；2026-11-18 依 Q-RDR-055 修改）
   - Given 依 REQ-RDR-011 開在 s4（尚未隨誦）
   - When 按「誦」
   - Then 從 s4 第一字開始
@@ -470,4 +473,44 @@
   - Then 隨誦結束：`follow-toggle` 文字「誦」、`aria-pressed="false"`；所有 `data-follow` 與 `follow-progress` 移除；畫面停在 s9
   - When 再按「誦」
   - Then 從 s9 第一字開始
+- 狀態：確認
+
+### REQ-RDR-038 原音隨誦
+- 來源：Q-RDR-055 及隨附決議 3、4、6（2026-11-18 新增）；設計 `docs/superpowers/specs/2026-11-18-voice-follow-design.md`
+- 類型：UI／行為
+- 驗收：
+  - Given 速度為「聲」，時間碼 `data/voice-timings.json` 已載入（`title`、`chars[0..259]`，秒；REQ-DAT-022），錄音 `data/voice.mp3`
+  - When 按「誦」
+  - Then 錄音播放；錄音位置為 t 秒時，光標所在字是滿足 `chars[i] ≤ t` 的最大 i（第 i 個經文字，不計標點，自 0 起）
+  - And `data-follow` 配色、琥珀線（REQ-RDR-033）、進度線（REQ-RDR-036）、自動翻頁與寬頁跟隨（REQ-RDR-034）同計時模式
+  - And 光標推進不使用 `requestAnimationFrame` 連續迴圈，也不依 `timeupdate` 事件
+  - Given 速度為「聲」，所見為封面
+  - When 按「誦」
+  - Then 經摺停在封面，錄音自 `title.start` 播放（經題）；`follow-toggle` 文字「停」、`aria-pressed="true"`；不存在任何 `data-follow` 與 `follow-progress`
+  - And 錄音到 `chars[0]` 時經摺翻到 s1，光標在 s1 第一字，`data-follow` 與進度線出現
+  - And 經題期間按「停」再按「誦」，錄音自 `title.start` 重新播放
+  - Given 速度為「聲」，隨誦已暫停（REQ-RDR-035 任一條件）
+  - Then 錄音同時暫停
+  - When 按「誦」且所見頁為光標所在頁
+  - Then 錄音自 `chars[光標]` 播放，從光標處續誦
+  - And 所見頁為其他經文頁 → 光標移到所見頁第一字，錄音自該字的 `chars` 播放
+  - When 錄音播放完畢（`ended`）
+  - Then 隨誦結束，同 REQ-RDR-037
+- 狀態：確認
+
+### REQ-RDR-039 錄音不可用與模式切換
+- 來源：Q-RDR-055 隨附決議 1、5（2026-11-18 新增）
+- 類型：行為
+- 驗收：
+  - Given 剛切到「聲」，時間碼或錄音尚未載入
+  - When 按「誦」
+  - Then 不開始隨誦：`follow-toggle` 仍為「誦」，無例外；載入完成後再按「誦」正常開始
+  - Given 速度為「聲」
+  - When 錄音無法播放（時間碼或錄音載入失敗、`play()` 被拒、`error` 事件）
+  - Then 行為同按「停」：隨誦暫停並保留光標，不顯示錯誤訊息
+  - Given 隨誦播放中
+  - When 速度由慢／中／快改到「聲」，或由「聲」改到其他速度
+  - Then 隨誦暫停並保留光標與 `data-follow`；錄音不再發聲
+  - When 再按「誦」
+  - Then 以新速度依 REQ-RDR-035 的續誦規則開始
 - 狀態：確認

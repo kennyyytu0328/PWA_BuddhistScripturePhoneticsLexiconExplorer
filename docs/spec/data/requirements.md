@@ -1,5 +1,5 @@
 # 需求登錄表 — data 單元
-> 狀態：已確認（2026-10-16，使用者確認；Q-DAT-001～009 已併入；2026-10-17 併入 Q-DAT-010～022）
+> 狀態：已確認（2026-10-16，使用者確認；Q-DAT-001～009 已併入；2026-10-17 併入 Q-DAT-010～022；2026-11-18 依 Q-DAT-023 新增 REQ-DAT-022）
 > 來源：`CLAUDE.md`（行號依 2026-10-16 版本；2026-10-17 於 §3.4-2 新增一行，第 96 行以後的現行行號 +1）；問題決議見 `open-questions.md`。
 
 ## 腳手架
@@ -240,4 +240,21 @@
   - Given `scripts/` 下的建置程式
   - When 執行 `pnpm vitest run --coverage`
   - Then 行覆蓋率 ≥ 80%
+- 狀態：確認
+
+## 原音時間碼
+
+### REQ-DAT-022 原音時間碼
+- 來源：Q-DAT-023、Q-RDR-055 隨附決議 7、9（2026-11-18 新增）；設計 `docs/superpowers/specs/2026-11-18-voice-follow-design.md`
+- 類型：驗證／產物
+- 驗收：
+  - Given `data/voice-timings.json` 為 `{ audio, duration, title: { start, end }, chars: number[], review: { voice: boolean } }`（時間皆為秒；`audio` 為相對 repo 根目錄的錄音路徑）
+  - When 執行 `pnpm build:voice`
+  - Then 下列任一不成立即以非 0 結束，錯誤訊息指出違反的規則：`chars.length` 等於經文字數（`data/heart-sutra.json` 非 `punct` token 的字數，260）；`chars` 嚴格遞增；`title.end ≤ chars[0]`；`chars` 最後一筆 `< duration`；`audio` 檔存在
+  - And 成功時寫出 `public/data/voice.mp3`（與 `audio` 位元組相同）與 `public/data/voice-timings.json`（內容同輸入，唯 `audio` 為 `"voice.mp3"`）
+  - Given `review.voice` 為 `false`
+  - When 執行 `pnpm build:voice`
+  - Then 照常產出，並在輸出中警告 `review.voice` 為 false
+  - When 執行 `pnpm build`（正式建置）
+  - Then 以非 0 結束，錯誤訊息列出 `review.voice`
 - 狀態：確認
