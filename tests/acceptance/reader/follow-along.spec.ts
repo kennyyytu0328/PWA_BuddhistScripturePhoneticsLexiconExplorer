@@ -469,7 +469,7 @@ test.describe('REQ-RDR-033 beats and colours', () => {
     const rtOf = (i: number) => cells.nth(CELL_OF_CHAR[i]).locator('rt').first()
     const rtBefore = [await colorOf(rtOf(0), 'color'), await colorOf(rtOf(40), 'color')]
     await start(page)
-    await page.clock.runFor(5 * beatMs('快') + 100) // cursor on character 5
+    await page.clock.runFor(PRE[5] * beatMs('快') + 100) // cursor on character 5 (character 4 is followed by ，: 2 beats)
     expect(await cursor(page)).toBe(5)
     const cellOf = (i: number) => cells.nth(CELL_OF_CHAR[i])
     await expect(async () => {
@@ -485,7 +485,7 @@ test.describe('REQ-RDR-033 beats and colours', () => {
   test('[REQ-RDR-033] the current cell has a 1px amber-500 line on its left, as long as the cell, clear of the <rt>', async ({ page }) => {
     await boot(page, { pace: '快' })
     await start(page)
-    await page.clock.runFor(5 * beatMs('快') + 100)
+    await page.clock.runFor(PRE[5] * beatMs('快') + 100) // cursor on character 5
     expect(await cursor(page)).toBe(5)
     const cell = page.locator('.cell, [data-testid="punct"]').nth(CELL_OF_CHAR[5])
     const info = await cell.evaluate((el) => {

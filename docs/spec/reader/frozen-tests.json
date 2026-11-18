@@ -21,7 +21,7 @@
     "tests/acceptance/reader/cover.spec.ts": "f8f8b7bd1f89b6f50b95d22899414ec698cd83ed8903707bea9c87140702fb63",
     "tests/acceptance/reader/swipe-hint.spec.ts": "a775f9b77d3519ca1b6339d09dc4f43165bb68957a301d662ba2892f34b6afb4",
     "tests/acceptance/reader/zhuyin-tone.spec.ts": "1e24625d6e3e9fa9544bdb6322ad5198009d0fa43ecd41821a115d3872b04cb6",
-    "tests/acceptance/reader/follow-along.spec.ts": "197aaffca726466ec35e7427f2ddf4fc327132cce0ef13b5a5cb0129025905d0"
+    "tests/acceptance/reader/follow-along.spec.ts": "a91c063ba81b71017ce496a822781b394d34dd6471cc70484c44425b7cf334c0"
   },
-  "frozenAt": "2026-11-18T01:08:53.997Z"
+  "frozenAt": "2026-11-18T01:54:16.459Z"
 }
