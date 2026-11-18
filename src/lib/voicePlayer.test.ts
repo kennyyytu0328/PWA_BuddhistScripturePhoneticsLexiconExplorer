@@ -47,6 +47,47 @@ describe('createVoicePlayer', () => {
     expect(calls).toContain('pause')
   })
 
+  it('reports a pause only when the recording has not ended', () => {
+    const { audio } = fakeAudio()
+    const player = createVoicePlayer(audio)
+    const onPause = vi.fn()
+    const off = player.onPause(onPause)
+    audio.dispatchEvent(new Event('pause'))
+    Object.defineProperty(audio, 'ended', { value: true, configurable: true })
+    audio.dispatchEvent(new Event('pause'))
+    off()
+    Object.defineProperty(audio, 'ended', { value: false, configurable: true })
+    audio.dispatchEvent(new Event('pause'))
+    expect(onPause).toHaveBeenCalledTimes(1)
+  })
+
+  it('treats a pause at the end position as the end even before `ended` reads true', () => {
+    const { audio } = fakeAudio()
+    const player = createVoicePlayer(audio)
+    const onPause = vi.fn()
+    player.onPause(onPause)
+    Object.defineProperty(audio, 'duration', { value: 90, configurable: true })
+    audio.currentTime = 90
+    audio.dispatchEvent(new Event('pause'))
+    expect(onPause).not.toHaveBeenCalled()
+    audio.currentTime = 40
+    audio.dispatchEvent(new Event('pause'))
+    expect(onPause).toHaveBeenCalledTimes(1)
+  })
+
+  it('pauses again when something outside the app starts the recording', async () => {
+    const { audio } = fakeAudio()
+    const player = createVoicePlayer(audio)
+    audio.dispatchEvent(new Event('play'))
+    expect(audio.pause).toHaveBeenCalledTimes(1)
+    await player.playAt(1)
+    audio.dispatchEvent(new Event('play'))
+    expect(audio.pause).toHaveBeenCalledTimes(1)
+    player.pause()
+    audio.dispatchEvent(new Event('play'))
+    expect(audio.pause).toHaveBeenCalledTimes(3)
+  })
+
   it('notifies ended and error listeners until unsubscribed', () => {
     const { audio } = fakeAudio()
     const player = createVoicePlayer(audio)

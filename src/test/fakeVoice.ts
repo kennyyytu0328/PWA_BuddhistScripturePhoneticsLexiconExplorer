@@ -24,6 +24,7 @@ export function fakePlayer() {
   let seekError = 0
   const ended = new Set<() => void>()
   const errors = new Set<() => void>()
+  const pauses = new Set<() => void>()
   const time = () => (playing ? pos + (Date.now() - startedAt) / 1000 : pos)
   const player = {
     playAt: vi.fn(async (seconds: number) => {
@@ -45,6 +46,10 @@ export function fakePlayer() {
       errors.add(listener)
       return () => void errors.delete(listener)
     },
+    onPause: (listener: () => void) => {
+      pauses.add(listener)
+      return () => void pauses.delete(listener)
+    },
   } satisfies VoicePlayer
   return {
     player,
@@ -59,5 +64,11 @@ export function fakePlayer() {
       ended.forEach((l) => l())
     },
     fail: () => errors.forEach((l) => l()),
+    /** Paused by something outside the app: a headset button, the media notification, a call. */
+    externalPause: () => {
+      pos = time()
+      playing = false
+      pauses.forEach((l) => l())
+    },
   }
 }

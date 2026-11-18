@@ -85,6 +85,24 @@ describe('useFollowAlong in voice mode', () => {
     expect(result.current.cursor).toBe(3)
   })
 
+  it('a seek that does not land pauses instead of freezing the cursor', async () => {
+    const { result, fake, play, advance } = setup()
+    fake.seekOffBy(-30)
+    await play('s4')
+    await advance(1)
+    expect(result.current).toMatchObject({ cursor: timeline.startOf.s4, playing: false })
+    expect(fake.isPlaying()).toBe(false)
+  })
+
+  it('a pause from outside the app pauses the follow-along', async () => {
+    const { result, fake, play, advance } = setup()
+    await play('s1')
+    await advance(600)
+    act(() => fake.externalPause())
+    expect(result.current).toMatchObject({ cursor: 2, playing: false })
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
   it('starts at another page first character with the recording at its start', async () => {
     const { result, fake, play } = setup()
     await play('s2')

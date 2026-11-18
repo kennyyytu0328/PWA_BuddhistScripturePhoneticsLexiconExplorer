@@ -4,6 +4,16 @@ import { VOICE_TIMINGS_URL, VOICE_URL, voiceTimingsSchema } from '../lib/voice'
 import { createVoicePlayer, type Voice } from '../lib/voicePlayer'
 
 /**
+ * The whole file as a Blob, played through an object URL: the service worker answers the element's Range
+ * requests with a plain 200, which leaves a URL-loaded recording unseekable, so resume would restart at 0:00.
+ */
+async function fetchRecording(): Promise<Blob> {
+  const response = await fetch(VOICE_URL)
+  if (!response.ok) throw new Error(`Failed to load ${VOICE_URL}: HTTP ${response.status}`)
+  return response.blob()
+}
+
+/**
  * The recording and its timings, loaded the first time `enabled` is true (the reader picks 聲) and kept after.
  * Null until loaded, or when loading fails (REQ-RDR-039: playing in 聲 then does nothing).
  */
@@ -15,15 +25,15 @@ export function useVoice(enabled: boolean): Voice | null {
     if (!enabled || requested.current) return
     requested.current = true
     // No cancel flag: under StrictMode the first run is the one that loads; a late set after unmount is a no-op.
-    fetchJson(VOICE_TIMINGS_URL, voiceTimingsSchema)
-      .then((timings) => {
-        const audio = new Audio(VOICE_URL)
+    Promise.all([fetchJson(VOICE_TIMINGS_URL, voiceTimingsSchema), fetchRecording()])
+      .then(([timings, recording]) => {
+        const audio = new Audio(URL.createObjectURL(recording))
         audio.preload = 'auto'
         setVoice({ player: createVoicePlayer(audio), timings })
       })
       .catch((error: unknown) => {
         requested.current = false // try again the next time 聲 is picked
-        console.warn('Voice timings could not be loaded:', error)
+        console.warn('Voice recording could not be loaded:', error)
       })
   }, [enabled])
 

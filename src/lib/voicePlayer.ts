@@ -10,6 +10,8 @@ export interface VoicePlayer {
   /** Returns an unsubscribe function. */
   onEnded(listener: () => void): () => void
   onError(listener: () => void): () => void
+  /** Paused before the end by something outside the app (headset button, media notification, a call). */
+  onPause(listener: () => void): () => void
 }
 
 export interface Voice {
@@ -22,16 +24,37 @@ function listen(audio: HTMLMediaElement, type: string, listener: () => void): ()
   return () => audio.removeEventListener(type, listener)
 }
 
+/** Within this of the duration counts as the end. */
+const END_TOLERANCE_S = 0.05
+
+const atEnd = (audio: HTMLMediaElement) =>
+  audio.ended || (Number.isFinite(audio.duration) && audio.currentTime >= audio.duration - END_TOLERANCE_S)
+
 export function createVoicePlayer(audio: HTMLMediaElement): VoicePlayer {
+  // Only the app starts the recording: a play from the media notification or a headset while the
+  // follow-along is paused would run the voice with no cursor, so it is paused again.
+  let wanted = false
+  audio.addEventListener('play', () => {
+    if (!wanted) audio.pause()
+  })
   return {
     playAt: async (seconds) => {
+      wanted = true
       audio.currentTime = seconds
       await audio.play()
     },
-    pause: () => audio.pause(),
+    pause: () => {
+      wanted = false
+      audio.pause()
+    },
     time: () => audio.currentTime,
     onEnded: (listener) => listen(audio, 'ended', listener),
     onError: (listener) => listen(audio, 'error', listener),
+    // Reaching the end fires `pause` just before `ended`; that one is the end, not a pause.
+    onPause: (listener) =>
+      listen(audio, 'pause', () => {
+        if (!atEnd(audio)) listener()
+      }),
   }
 }
 
@@ -45,6 +68,8 @@ export interface VoiceClockHandlers {
 
 /** Floor for the next timer, so a stalled recording polls instead of spinning. */
 const MIN_DELAY_MS = 10
+/** A resume further than this from its target did not seek (e.g. an unseekable source). */
+const SEEK_TOLERANCE_S = 0.5
 
 /**
  * Plays from `from` seconds and reports each character as the recording reaches it: one timer per
@@ -71,18 +96,22 @@ export function startVoiceClock({ player, timings }: Voice, from: number, handle
   const offEnded = player.onEnded(() => {
     if (!stopped) handlers.onEnded()
   })
-  const offError = player.onError(() => {
+  const fail = () => {
     if (!stopped) handlers.onFail()
-  })
-  player.playAt(from).then(tick, () => {
-    if (!stopped) handlers.onFail()
-  })
+  }
+  const offError = player.onError(fail)
+  const offPause = player.onPause(fail)
+  player.playAt(from).then(() => {
+    if (Math.abs(player.time() - from) > SEEK_TOLERANCE_S) fail()
+    else tick()
+  }, fail)
 
   return () => {
     stopped = true
     clearTimeout(timer)
     offEnded()
     offError()
+    offPause()
     player.pause()
   }
 }
