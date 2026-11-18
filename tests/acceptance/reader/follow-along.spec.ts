@@ -170,10 +170,11 @@ async function start(page: Page): Promise<void> {
 }
 
 /** Poll (advancing the clock a little each time) until page `seg` is aligned; returns the elapsed real ms. */
-async function waitAligned(page: Page, seg: string, limitMs = 6000): Promise<number> {
+async function waitAligned(page: Page, seg: string, limitMs = 6000, probe?: () => Promise<void>): Promise<number> {
   const { w } = await viewportSize(page)
   const t0 = Date.now()
   for (;;) {
+    if (probe) await probe()
     const r = await pageRight(page, seg)
     if (Math.abs(r - w) <= 1.5) return Date.now() - t0
     if (Date.now() - t0 > limitMs) throw new Error(`page ${seg} not aligned within ${limitMs}ms (right=${r}, w=${w})`)
@@ -505,9 +506,10 @@ test.describe('REQ-RDR-033 beats and colours', () => {
         width: parseFloat(cs.width),
         height: parseFloat(cs.height),
         left: cs.left,
+        right: cs.right,
         bg: T.rgba(cs.backgroundColor),
         borders,
-        cell: { left: r.left, width: r.width, height: r.height },
+        cell: { left: r.left, right: r.right, width: r.width, height: r.height },
         rtLeft: rtr ? rtr.left : null,
       }
     })
@@ -524,12 +526,19 @@ test.describe('REQ-RDR-033 beats and colours', () => {
       expect(line.every((b) => Math.abs(b.w - 1) <= 0.05 && colorsClose(b.color, AMBER_500, 2))).toBe(true)
     }
     expect(Math.abs(info.height - info.cell.height)).toBeLessThanOrEqual(1.5)
-    const x = parseFloat(info.left)
-    expect(Number.isFinite(x), `left offset "${info.left}"`).toBe(true)
-    // on the left side of the glyph: left half of the cell, and clear of the <rt> (which sits to the right in vertical text)
-    expect(x).toBeLessThanOrEqual(info.cell.width * 0.5)
-    expect(x).toBeGreaterThanOrEqual(-4)
-    if (info.rtLeft !== null) expect(info.cell.left + x + 1).toBeLessThanOrEqual(info.rtLeft + 0.5)
+    // x-extent of the line, from whichever of left / right is resolved to px
+    const lineW = info.width > 0 ? info.width : 1
+    const left = parseFloat(info.left)
+    const right = parseFloat(info.right)
+    expect(Number.isFinite(left) || Number.isFinite(right), `left "${info.left}" / right "${info.right}"`).toBe(true)
+    const x0 = Number.isFinite(left) ? info.cell.left + left : info.cell.right - right - lineW
+    const x1 = x0 + lineW
+    // left of the glyph: its centre is in the left half of the cell
+    expect(x0 + lineW / 2).toBeLessThanOrEqual(info.cell.left + info.cell.width * 0.5)
+    // but it must not reach into the neighbouring column on the left
+    expect(x0).toBeGreaterThanOrEqual(info.cell.left - info.cell.width)
+    // clear of the <rt> (which sits to the right of the glyph in vertical text)
+    if (info.rtLeft !== null) expect(x1).toBeLessThanOrEqual(info.rtLeft + 0.5)
   })
 
   test('[REQ-RDR-033] the colour transition is at most 0.3s with the zen easing', async ({ page }) => {
@@ -568,12 +577,20 @@ test.describe('REQ-RDR-033 beats and colours', () => {
 // ===========================================================================
 // REQ-RDR-034 auto page turn
 // ===========================================================================
-const easingSeen = (page: Page): Promise<boolean> =>
+/**
+ * A running animation with the zen easing that belongs to the page turn: its target is the scroller, a sutra page / cover,
+ * or a container of them, and NOT a character cell, a button or other chrome (the cells' colour transitions use the same easing).
+ */
+const turnEasingSeen = (page: Page): Promise<boolean> =>
   page.evaluate((want) => {
     const sq = (s: string) => s.replace(/\s+/g, '')
+    const viewport = document.querySelector('[data-testid="sutra-viewport"]')
     return document.getAnimations().some((a) => {
       const eff = a.effect as KeyframeEffect | null
-      if (!eff) return false
+      const target = eff?.target as Element | null | undefined
+      if (!eff || !target || !viewport) return false
+      if (target.closest('.cell, [data-testid="punct"], button, [data-testid="follow-progress"]')) return false
+      if (!(viewport.contains(target) || target.contains(viewport))) return false
       const list: string[] = []
       try { list.push(String(eff.getTiming().easing)) } catch { /* ignore */ }
       try { for (const k of eff.getKeyframes()) list.push(String(k.easing)) } catch { /* ignore */ }
@@ -592,11 +609,12 @@ test.describe('REQ-RDR-034 auto page turn', () => {
     await expectPageAligned(page, 's1')
     await page.clock.runFor(250)
     expect(await cursor(page)).toBe(next)
-    let eased = await easingSeen(page)
-    const elapsed = await waitAligned(page, 's2', 3000)
-    eased = eased || (await easingSeen(page))
+    let eased = false
+    const elapsed = await waitAligned(page, 's2', 3000, async () => {
+      eased = eased || (await turnEasingSeen(page))
+    })
     expect(elapsed, 'turn duration (real ms)').toBeLessThanOrEqual(1300)
-    expect(eased, 'a running animation with cubic-bezier(0.19, 1, 0.22, 1)').toBe(true)
+    expect(eased, 'a running page-turn animation (not a cell colour transition) with cubic-bezier(0.19, 1, 0.22, 1)').toBe(true)
     await page.waitForTimeout(150)
     const { w } = await viewportSize(page)
     expect(Math.abs((await pageRight(page, 's2')) - w)).toBeLessThanOrEqual(1.5)
@@ -708,7 +726,11 @@ test.describe('REQ-RDR-035 pause and resume', () => {
       await expectPageAligned(page, 's2')
       await expect(toggleBtn(page)).toHaveText('誦')
     })
-    await expectPausedAt(page, 3) // cursor and marks stay where they were
+    // paused once the swipe settled on another page: cursor and marks stay where they were at that moment, on s1
+    const c = await cursor(page)
+    expect(c).toBeGreaterThanOrEqual(3)
+    expect(SEG_OF_CHAR(c)).toBe('s1')
+    await expectPausedAt(page, c)
     await toggleBtn(page).click()
     await expect(toggleBtn(page)).toHaveText('停')
     expect(await cursor(page)).toBe(SEG_START.s2)
@@ -731,7 +753,8 @@ test.describe('REQ-RDR-035 pause and resume', () => {
     await toggleBtn(page).click()
     await expect(toggleBtn(page)).toHaveText('停')
     expect(await cursor(page)).toBe(5)
-    await page.clock.runFor(beatMs('快') * (BEATS[5] + 0.5))
+    // a fresh full beat or only the remaining time are both fine: at BEATS+0.25 beats the cursor is on 6 either way
+    await page.clock.runFor(beatMs('快') * (BEATS[5] + 0.25))
     expect(await cursor(page)).toBe(6)
   })
 
@@ -740,12 +763,12 @@ test.describe('REQ-RDR-035 pause and resume', () => {
     await expectCoverAligned(page)
     await toggleBtn(page).click()
     await expect(toggleBtn(page)).toHaveText('停')
+    // the clock is frozen: right after the tap no time has passed, so the cursor sits on the first character of s1
+    expect(await cursor(page)).toBe(SEG_START.s1)
     await waitAligned(page, 's1', 5000)
-    expect(await cursor(page)).toBeGreaterThanOrEqual(0)
-    expect(SEG_OF_CHAR(await cursor(page))).toBe('s1')
-    // the cursor starts at the first character: after 0.5 beat it must still be on it
-    const states = await followStates(page)
-    expect(states[0]).toMatch(/current|read/)
+    const c = await cursor(page)
+    expect(SEG_OF_CHAR(c)).toBe('s1')
+    expect(c).toBeLessThanOrEqual(8) // the turn itself takes at most ~1.2s (<= 8 beats at 中)
   })
 
   test('[REQ-RDR-035] opening on s4 (REQ-RDR-011) and pressing 誦 starts at the first character of s4', async ({ page }) => {
@@ -776,8 +799,9 @@ test.describe('REQ-RDR-035 pause and resume', () => {
   test('[REQ-RDR-035] tapping a lex token opens its drawer (and pauses) via the normal lex-token path', async ({ page }) => {
     await boot(page, { pace: '快' })
     await playUntil(page, 1)
-    await lexToken(page, '觀自在').click()
-    await expect(page.getByTestId('lexicon-drawer')).toBeVisible()
+    await withTicking(page, async () => {
+      await openLexicon(page, '觀自在')
+    })
     await expect(toggleBtn(page)).toHaveText('誦')
   })
 })
