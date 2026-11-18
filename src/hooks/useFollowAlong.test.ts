@@ -1,12 +1,11 @@
-import { readFileSync } from 'node:fs'
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { COVER_PAGE } from '../lib/cover'
 import { beatMs, buildTimeline, type Pace } from '../lib/followAlong'
-import { astSchema } from '../lib/types'
+import { sutraSegments } from '../lib/sutraFixture'
 import { useFollowAlong } from './useFollowAlong'
 
-const ast = astSchema.parse(JSON.parse(readFileSync('public/data/heart-sutra.ast.json', 'utf8')))
+const ast = { segments: sutraSegments }
 const timeline = buildTimeline(ast.segments)
 const ms = (pace: Pace, index: number) => beatMs(pace) * timeline.steps[index].beats
 
@@ -42,6 +41,17 @@ describe('useFollowAlong', () => {
     act(() => result.current.play('s1'))
     expect(result.current.cursor).toBe(1)
     expect(result.current.playing).toBe(true)
+  })
+
+  it('resuming mid-beat keeps the cursor and advances within one beat', () => {
+    const { result } = setup()
+    act(() => result.current.play(COVER_PAGE))
+    act(() => void vi.advanceTimersByTime(ms(100, 0) / 2))
+    act(() => result.current.pause())
+    act(() => result.current.play('s1'))
+    expect(result.current.cursor).toBe(0)
+    act(() => void vi.advanceTimersByTime(ms(100, 0)))
+    expect(result.current.cursor).toBe(1)
   })
 
   it('play from a restored page starts at that page', () => {

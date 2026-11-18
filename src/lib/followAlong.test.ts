@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { COVER_PAGE } from './cover'
 import {
@@ -11,9 +10,10 @@ import {
   PACE_LABEL,
   startIndex,
 } from './followAlong'
-import { astSchema, isPunct } from './types'
+import { sutraSegments } from './sutraFixture'
+import { isPunct } from './types'
 
-const ast = astSchema.parse(JSON.parse(readFileSync('public/data/heart-sutra.ast.json', 'utf8')))
+const ast = { segments: sutraSegments }
 const timeline = buildTimeline(ast.segments)
 
 /** Beats of the first character of s1 that is directly followed by the given punctuation. */
