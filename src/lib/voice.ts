@@ -28,3 +28,8 @@ export function charIndexAt(chars: readonly number[], seconds: number): number |
   }
   return lo
 }
+
+/** Where a term's clip lies: from its first character to the start of the next one (the recording end after the last). */
+export function clipRange(timings: VoiceTimings, index: number, count: number): { from: number; to: number } {
+  return { from: timings.chars[index], to: timings.chars[index + count] ?? timings.duration }
+}

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Drawer } from 'vaul'
 import type { Lexicon, WordToken } from '../lib/types'
-import { LexiconContent } from './LexiconContent'
+import { LexiconContent, type ListenControl } from './LexiconContent'
 
 interface Props {
   open: boolean
@@ -10,15 +10,26 @@ interface Props {
   /** Entry of the tapped token. Mount a fresh drawer (new `key`) per tap so the xref trail starts empty. */
   lex: string
   token: WordToken
+  /** 聽 for the tapped term (REQ-RDR-043); without it the drawer has no button. */
+  listen?: ListenControl
 }
 
-export function LexiconDrawer({ open, onOpenChange, lexicon, lex, token }: Props) {
+export function LexiconDrawer({ open, onOpenChange, lexicon, lex, token, listen }: Props) {
   const [trail, setTrail] = useState<string[]>([])
   const current = trail.length > 0 ? trail[trail.length - 1] : lex
   const isRoot = trail.length === 0
 
+  const follow = (target: string) => {
+    listen?.stop()
+    setTrail((t) => [...t, target])
+  }
+  const changeOpen = (next: boolean) => {
+    if (!next) listen?.stop()
+    onOpenChange(next)
+  }
+
   return (
-    <Drawer.Root open={open} onOpenChange={onOpenChange}>
+    <Drawer.Root open={open} onOpenChange={changeOpen}>
       <Drawer.Portal>
         <Drawer.Overlay className="lexicon-overlay" />
         <Drawer.Content className="lexicon-drawer" data-testid="lexicon-drawer" aria-describedby={undefined}>
@@ -35,7 +46,8 @@ export function LexiconDrawer({ open, onOpenChange, lexicon, lex, token }: Props
             lexicon={lexicon}
             lex={current}
             token={isRoot ? token : null}
-            onXref={(target) => setTrail((t) => [...t, target])}
+            onXref={follow}
+            listen={listen}
           />
           <p className="lexicon-attribution" data-testid="lexicon-attribution">
             {lexicon.attribution}

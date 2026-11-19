@@ -9,6 +9,7 @@ import {
   MODE_LABEL,
   nextMode,
   startIndex,
+  tokenChars,
 } from './followAlong'
 import { sutraSegments } from '../test/sutraFixture'
 import { isPunct } from './types'
@@ -129,5 +130,49 @@ describe('startIndex', () => {
   it('falls back to 0 for an unknown page', () => {
     expect(startIndex(timeline, 'nope', null)).toBe(0)
     expect(startIndex(timeline, 'nope', 7)).toBe(0)
+  })
+})
+
+describe('tokenChars', () => {
+  const tokenKeys = ast.segments.flatMap((s) => s.tokens.map((t, i) => ({ key: `${s.id}:${i}`, token: t, segment: s.id })))
+  const words = tokenKeys.filter(({ token }) => !isPunct(token))
+
+  it('puts the first token of s1 at character 0', () => {
+    const first = words[0]
+    expect(tokenChars(ast.segments, first.key)).toEqual({
+      index: 0,
+      count: isPunct(first.token) ? 0 : first.token.chars.length,
+    })
+  })
+
+  it('does not count punctuation', () => {
+    const at = tokenKeys.findIndex(({ token }, i) => isPunct(token) && i > 0 && !isPunct(tokenKeys[i + 1].token))
+    const target = tokenKeys[at + 1]
+    const before = tokenKeys
+      .slice(0, at + 1)
+      .reduce((sum, { token }) => sum + (isPunct(token) ? 0 : token.chars.length), 0)
+    expect(tokenChars(ast.segments, target.key)?.index).toBe(before)
+  })
+
+  it('gives a repeated term a larger index the second time', () => {
+    const repeated = words.find(({ token }, i) => words.slice(i + 1).some((w) => w.token.t === token.t))!
+    const second = words.slice(words.indexOf(repeated) + 1).find((w) => w.token.t === repeated.token.t)!
+    const a = tokenChars(ast.segments, repeated.key)!
+    const b = tokenChars(ast.segments, second.key)!
+    expect(b.index).toBeGreaterThan(a.index)
+    expect(b.count).toBe(a.count)
+  })
+
+  it('counts characters like buildTimeline', () => {
+    const last = words[words.length - 1]
+    const range = tokenChars(ast.segments, last.key)!
+    expect(range.index + range.count).toBe(timeline.steps.length)
+  })
+
+  it('is null for a punctuation key and for an unknown key', () => {
+    const punct = tokenKeys.find(({ token }) => isPunct(token))!
+    expect(tokenChars(ast.segments, punct.key)).toBeNull()
+    expect(tokenChars(ast.segments, 'nope:0')).toBeNull()
+    expect(tokenChars(ast.segments, 's1:9999')).toBeNull()
   })
 })

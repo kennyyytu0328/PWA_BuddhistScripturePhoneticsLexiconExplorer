@@ -3,12 +3,14 @@ import { useFollowAlong } from '../hooks/useFollowAlong'
 import { useHaptics } from '../hooks/useHaptics'
 import { useFollowPace } from '../hooks/useFollowPace'
 import { useVoice } from '../hooks/useVoice'
+import { useVoiceClip } from '../hooks/useVoiceClip'
 import { COVER_PAGE } from '../lib/cover'
-import { buildTimeline, DEFAULT_PACE } from '../lib/followAlong'
+import { buildTimeline, DEFAULT_PACE, tokenChars } from '../lib/followAlong'
 import { usePhoneticMode } from '../hooks/usePhoneticMode'
 import { useReadingProgress } from '../hooks/useReadingProgress'
 import { useLexiconSelection } from '../hooks/useLexiconSelection'
 import { useWakeLock } from '../hooks/useWakeLock'
+import { clipRange } from '../lib/voice'
 import type { ReaderData, Segment } from '../lib/types'
 import { FollowControls } from './FollowControls'
 import { FollowProgress } from './FollowProgress'
@@ -29,12 +31,21 @@ export function Reader({ data }: Props) {
   const { pace, cycle: cyclePace } = useFollowPace()
   const segments = data.ast.segments
   const timeline = useMemo(() => buildTimeline(segments), [segments])
-  const voice = useVoice(pace === 'voice')
+  const voice = useVoice(pace === 'voice' || lexicon.selection !== null)
   // Switching into or out of 聲 while playing pauses inside useFollowAlong (REQ-RDR-039).
   const { cursor, playing, play, pause, end } = useFollowAlong(timeline, pace ?? DEFAULT_PACE, voice)
   const [visible, setVisible] = useState<string | null>(null)
   // The segment stays set after closing so the panel content survives the slide-out animation.
   const [vernacular, setVernacular] = useState<{ segment: Segment; open: boolean } | null>(null)
+
+  const clip = useVoiceClip(voice)
+  const selectionKey = lexicon.selection?.key
+  const { toggle: toggleClip } = clip
+  const toggleListen = useCallback(() => {
+    const chars = selectionKey ? tokenChars(segments, selectionKey) : null
+    if (!voice || !chars) return
+    toggleClip(clipRange(voice.timings, chars.index, chars.count))
+  }, [voice, selectionKey, segments, toggleClip])
 
   const vibrate = useHaptics()
   const endFollow = useCallback(() => {
@@ -114,6 +125,7 @@ export function Reader({ data }: Props) {
           lexicon={data.lexicon}
           lex={lexicon.selection.lex}
           token={lexicon.selection.token}
+          listen={{ playing: clip.playing, toggle: toggleListen, stop: clip.stop }}
         />
       ) : null}
     </>

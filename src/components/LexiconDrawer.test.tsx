@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import type { Lexicon, WordToken } from '../lib/types'
 import { LexiconDrawer } from './LexiconDrawer'
 
@@ -91,5 +91,55 @@ describe('LexiconDrawer', () => {
     mount(token, (open) => calls.push(open))
     fireEvent.keyDown(screen.getByTestId('lexicon-drawer'), { key: 'Escape' })
     expect(calls).toEqual([false])
+  })
+
+  describe('聽', () => {
+    const listenProps = (playing = false) => ({ playing, toggle: vi.fn(), stop: vi.fn() })
+    const mountListen = (listen = listenProps(), onOpenChange: (open: boolean) => void = () => {}) => {
+      render(<LexiconDrawer open onOpenChange={onOpenChange} lexicon={lexicon} lex="甲" token={token} listen={listen} />)
+      return listen
+    }
+
+    it('root entry shows 聽 with the play label', () => {
+      const listen = mountListen()
+      const button = screen.getByTestId('lexicon-listen')
+      expect(button.closest('[data-testid="lexicon-readings"]')).not.toBeNull()
+      expect(button.textContent).toBe('聽')
+      expect(button.getAttribute('aria-label')).toBe('播放讀音')
+      expect(button.getAttribute('aria-pressed')).toBe('false')
+      fireEvent.click(button)
+      expect(listen.toggle).toHaveBeenCalledTimes(1)
+    })
+
+    it('playing shows 停 with the stop label and aria-pressed', () => {
+      mountListen(listenProps(true))
+      const button = screen.getByTestId('lexicon-listen')
+      expect(button.textContent).toBe('停')
+      expect(button.getAttribute('aria-label')).toBe('停止播放')
+      expect(button.getAttribute('aria-pressed')).toBe('true')
+    })
+
+    it('no 聽 on a cross-referenced entry, back again after 返回', () => {
+      mountListen()
+      fireEvent.click(screen.getByTestId('lexicon-xref'))
+      expect(screen.queryByTestId('lexicon-listen')).toBeNull()
+      fireEvent.click(screen.getByTestId('lexicon-back'))
+      expect(screen.getAllByTestId('lexicon-listen')).toHaveLength(1)
+    })
+
+    it('following an xref and closing the drawer call stop', () => {
+      const closes: boolean[] = []
+      const listen = mountListen(listenProps(), (open) => closes.push(open))
+      fireEvent.click(screen.getByTestId('lexicon-xref'))
+      expect(listen.stop).toHaveBeenCalledTimes(1)
+      fireEvent.keyDown(screen.getByTestId('lexicon-drawer'), { key: 'Escape' })
+      expect(closes).toEqual([false])
+      expect(listen.stop).toHaveBeenCalledTimes(2)
+    })
+
+    it('no listen prop: no button', () => {
+      mount()
+      expect(screen.queryByTestId('lexicon-listen')).toBeNull()
+    })
   })
 })

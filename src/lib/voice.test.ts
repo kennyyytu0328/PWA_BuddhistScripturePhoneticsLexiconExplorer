@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { charIndexAt, VOICE_TIMINGS_URL, VOICE_URL, voiceTimingsSchema } from './voice'
+import { charIndexAt, clipRange, VOICE_TIMINGS_URL, VOICE_URL, voiceTimingsSchema } from './voice'
 
 describe('charIndexAt', () => {
   const chars = [1, 2, 3]
@@ -24,5 +24,16 @@ describe('voice data', () => {
     expect(voiceTimingsSchema.parse(ok)).toEqual(ok)
     expect(voiceTimingsSchema.safeParse({ ...ok, chars: ['x'] }).success).toBe(false)
     expect(voiceTimingsSchema.safeParse({ ...ok, title: undefined }).success).toBe(false)
+  })
+})
+
+describe('clipRange', () => {
+  const timings = { audio: 'a', duration: 9, title: { start: 0, end: 1 }, chars: [1, 2, 3, 4], review: { voice: true } }
+  it('runs from the first character to the start of the one after the term', () => {
+    expect(clipRange(timings, 1, 2)).toEqual({ from: 2, to: 4 })
+  })
+  it('ends at the recording end for the last characters', () => {
+    expect(clipRange(timings, 2, 2)).toEqual({ from: 3, to: 9 })
+    expect(clipRange(timings, 3, 1)).toEqual({ from: 4, to: 9 })
   })
 })

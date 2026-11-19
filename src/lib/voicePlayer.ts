@@ -115,3 +115,44 @@ export function startVoiceClock({ player, timings }: Voice, from: number, handle
     player.pause()
   }
 }
+
+/**
+ * Plays the recording from `range.from` and pauses it at `range.to`: one timer aimed at the end, re-synced from
+ * the audio position on every tick (no rAF, no timeupdate). `onDone` runs once when the clip ends or breaks off
+ * (ended, error, outside pause, rejected play, failed seek). The returned stop function pauses silently.
+ */
+export function startVoiceClip({ player }: Voice, range: { from: number; to: number }, onDone: () => void): () => void {
+  let closed = false
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const offs: (() => void)[] = []
+
+  const close = () => {
+    closed = true
+    clearTimeout(timer)
+    offs.forEach((off) => off())
+    player.pause()
+  }
+  const finish = () => {
+    if (closed) return
+    close()
+    onDone()
+  }
+  const tick = () => {
+    if (closed) return
+    const now = player.time()
+    if (now >= range.to) return finish()
+    // Ignore float noise so the timer is not a whole millisecond late.
+    timer = setTimeout(tick, Math.max(MIN_DELAY_MS, Math.ceil((range.to - now) * 1000 - 1e-6)))
+  }
+
+  offs.push(player.onEnded(finish), player.onError(finish), player.onPause(finish))
+  player.playAt(range.from).then(() => {
+    if (closed) return
+    if (Math.abs(player.time() - range.from) > SEEK_TOLERANCE_S) finish()
+    else tick()
+  }, finish)
+
+  return () => {
+    if (!closed) close()
+  }
+}

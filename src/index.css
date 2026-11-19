@@ -532,6 +532,38 @@ rt {
   font-size: var(--def-size);
 }
 
+/* 聽 sits right of the readings, centred on them (REQ-RDR-043); a pill button like 返回, but a 44px circle. */
+.lexicon-readings {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 1rem;
+}
+
+.lexicon-readings > h3 {
+  grid-column: 1 / -1;
+}
+
+.lexicon-readings > p {
+  grid-column: 1;
+}
+
+.lexicon-listen {
+  grid-column: 2;
+  grid-row: 2 / span 3;
+  align-self: center;
+  box-sizing: border-box;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--color-stone-400);
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--color-stone-200);
+  font-family: var(--font-sans);
+  font-weight: 300;
+  cursor: pointer;
+}
+
 /* 返回 is a button, so it takes the pill shape (§6.5); same look as the other pill buttons. */
 .lexicon-back,
 [data-testid='lexicon-xref'] {

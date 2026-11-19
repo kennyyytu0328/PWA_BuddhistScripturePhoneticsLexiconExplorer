@@ -85,3 +85,19 @@ export function startIndex(timeline: Timeline, visible: string, cursor: number |
   if (cursor !== null && cursor >= start && cursor < start + timeline.countOf[visible]) return cursor
   return start
 }
+
+/** Global character index of a token's first character and its length; punctuation is not counted, as in buildTimeline. */
+export function tokenChars(segments: Segment[], key: string): { index: number; count: number } | null {
+  const [segmentId, rawIndex] = key.split(':')
+  const tokenIndex = Number(rawIndex)
+  let index = 0
+  for (const segment of segments) {
+    for (let i = 0; i < segment.tokens.length; i++) {
+      const token = segment.tokens[i]
+      if (isPunct(token)) continue
+      if (segment.id === segmentId && i === tokenIndex) return { index, count: token.chars.length }
+      index += token.chars.length
+    }
+  }
+  return null
+}

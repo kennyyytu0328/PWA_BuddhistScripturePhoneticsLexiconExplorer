@@ -2,21 +2,44 @@ import { collectXrefs, orderSenses } from '../lib/senses'
 import type { Lexicon, WordToken } from '../lib/types'
 import { Definition } from './Definition'
 
+export interface ListenControl {
+  playing: boolean
+  toggle: () => void
+  stop: () => void
+}
+
 interface Props {
   lexicon: Lexicon
   lex: string
   /** Set only for the entry the tapped token points to; cross-referenced entries have no token. */
   token: WordToken | null
   onXref: (target: string) => void
+  listen?: ListenControl
 }
 
-function Readings({ token }: { token: WordToken }) {
+function ListenButton({ playing, toggle }: ListenControl) {
   return (
-    <section data-testid="lexicon-readings">
+    <button
+      type="button"
+      className="lexicon-listen"
+      data-testid="lexicon-listen"
+      aria-label={playing ? '停止播放' : '播放讀音'}
+      aria-pressed={playing}
+      onClick={toggle}
+    >
+      {playing ? '停' : '聽'}
+    </button>
+  )
+}
+
+function Readings({ token, listen }: { token: WordToken; listen?: ListenControl }) {
+  return (
+    <section data-testid="lexicon-readings" className="lexicon-readings">
       <h3>讀音</h3>
       <p data-testid="reading-zhuyin">{token.chars.map((c) => c.zy).join(' ')}</p>
       <p data-testid="reading-pinyin">{token.chars.map((c) => c.py).join(' ')}</p>
       {token.iast ? <p data-testid="reading-iast">{token.iast}</p> : null}
+      {listen ? <ListenButton {...listen} /> : null}
     </section>
   )
 }
@@ -42,14 +65,14 @@ function Xrefs({ targets, lexicon, onXref }: { targets: string[]; lexicon: Lexic
   )
 }
 
-export function LexiconContent({ lexicon, lex, token, onXref }: Props) {
+export function LexiconContent({ lexicon, lex, token, onXref, listen }: Props) {
   const entry = lexicon.entries[lex]
   if (!entry) return null
   const senses = orderSenses(entry.senses, token?.sense)
   const xrefs = collectXrefs(entry.senses)
   return (
     <>
-      {token ? <Readings token={token} /> : null}
+      {token ? <Readings token={token} listen={listen} /> : null}
       <section>
         <h3>釋義</h3>
         {senses.map(({ sense, adopted }, i) => (
