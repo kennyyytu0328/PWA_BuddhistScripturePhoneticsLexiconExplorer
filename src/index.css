@@ -271,11 +271,25 @@ body {
    <rt> sets its own colour, so it is untouched. The current mark is out of flow (no layout shift, REQ-RDR-027). */
 .cell,
 .punct {
-  transition: color 0.3s var(--ease-zen);
+  transition:
+    color 0.3s var(--ease-zen),
+    text-shadow 0.3s var(--ease-zen);
 }
 
 [data-follow='ahead'] {
   color: var(--color-stone-400);
+}
+
+/* A soft amber halo lifts the current character off the page; text-shadow paints no box, so it is not
+   the box-shadow §6.5 rules out. Its <rt> keeps the plain reading colour. */
+.cell[data-follow='current'] {
+  text-shadow:
+    0 0 6px rgb(245 158 11 / 0.55),
+    0 0 14px rgb(245 158 11 / 0.3);
+}
+
+.cell[data-follow='current'] rt {
+  text-shadow: none;
 }
 
 .cell[data-follow='current']::after {
