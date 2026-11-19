@@ -329,6 +329,29 @@ body {
   background: var(--color-amber-500);
 }
 
+/* Term line (REQ-RDR-041): a thin line left of every character of a tappable name term, same geometry as the
+   amber follow mark so the two coincide. Out of flow, static; the ends are inset so adjacent terms stay apart. */
+.lex-token .cell::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 100%;
+  margin-right: 2px;
+  width: 1px;
+  background: rgb(168 162 158 / 0.6);
+}
+
+.lex-token > .cell:first-child::before,
+.lex-token > .cell-group:first-child > .cell:first-of-type::before {
+  top: 3px;
+}
+
+.lex-token > .cell:last-child::before,
+.lex-token > .cell-group:last-child > .cell:last-of-type::before {
+  bottom: 3px;
+}
+
 rt {
   position: absolute;
   top: 50%;
