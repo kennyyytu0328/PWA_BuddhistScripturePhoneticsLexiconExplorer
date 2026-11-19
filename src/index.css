@@ -190,12 +190,16 @@ body {
   cursor: pointer;
 }
 
-/* 回到經首: the column after the last page's final column; a quiet outline capsule at its top, horizontal text. */
-.sutra-end {
-  padding-block-start: 1.5rem;
+/* 回到經首 sits right above 白話參考 on the last page. It is out of flow, so it never widens the page (a page wider
+   than the window would cut both buttons off); the page's columns end above it instead. */
+.sutra-page-last .sutra-text {
+  height: calc(100dvh - 1.5rem - (1.5rem + 44px + 0.5rem + 44px + 0.75rem + env(safe-area-inset-bottom)));
 }
 
 .back-to-cover {
+  position: absolute;
+  bottom: calc(1.5rem + 44px + 0.5rem + env(safe-area-inset-bottom));
+  left: 1rem;
   writing-mode: horizontal-tb;
   min-height: 44px;
   padding: 0 1rem;

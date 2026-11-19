@@ -13,7 +13,7 @@ interface Props {
   followAt: number | null
   /** Opens this page's 白話參考 panel; the button is rendered only when given. Keep it referentially stable. */
   onOpenVernacular?: (segmentId: string) => void
-  /** Given on the last page only: renders 回到經首 after the final column. Keep it referentially stable. */
+  /** Given on the last page only: renders 回到經首 above 白話參考. Keep it referentially stable. */
   onBackToCover?: () => void
 }
 
@@ -42,7 +42,11 @@ function groupWithPunctuation(tokens: TokenData[]): Indexed[][] {
 
 export const SutraPage = memo(function SutraPage({ segment, mode, activeKey, onSelect, followAt, onOpenVernacular, onBackToCover }: Props) {
   return (
-    <section className="sutra-page" data-testid="sutra-page" data-segment={segment.id}>
+    <section
+      className={onBackToCover ? 'sutra-page sutra-page-last' : 'sutra-page'}
+      data-testid="sutra-page"
+      data-segment={segment.id}
+    >
       <div className="sutra-text">
         {groupWithPunctuation(segment.tokens).map((group) => (
           <span className="no-break" key={group[0].index}>
@@ -64,11 +68,9 @@ export const SutraPage = memo(function SutraPage({ segment, mode, activeKey, onS
         ))}
       </div>
       {onBackToCover && (
-        <div className="sutra-end">
-          <button type="button" className="back-to-cover" data-testid="back-to-cover" onClick={onBackToCover}>
-            {BACK_TO_COVER}
-          </button>
-        </div>
+        <button type="button" className="back-to-cover" data-testid="back-to-cover" onClick={onBackToCover}>
+          {BACK_TO_COVER}
+        </button>
       )}
       {onOpenVernacular && (
         <button

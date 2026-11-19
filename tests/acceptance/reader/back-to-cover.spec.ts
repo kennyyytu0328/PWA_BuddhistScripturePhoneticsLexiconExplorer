@@ -45,6 +45,21 @@ test.describe('REQ-RDR-040 回到經首', () => {
     expect(others.filter((o) => overlaps(b, o))).toEqual([])
   })
 
+  test('[REQ-RDR-040] the button does not widen s9: at 360x560 the page is one window wide and both buttons are in view', async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 560 })
+    await gotoLastPage(page)
+    const s9 = await boxOf(pageEl(page, 's9'))
+    expect(s9.right - s9.left).toBeLessThanOrEqual(360 + 0.5)
+    const b = await boxOf(back(page))
+    const v = await boxOf(pageEl(page, 's9').locator('button[data-testid="vernacular-toggle"]'))
+    for (const box of [b, v]) {
+      expect(box.left).toBeGreaterThanOrEqual(0)
+      expect(box.right).toBeLessThanOrEqual(360)
+    }
+    expect(b.bottom).toBeLessThanOrEqual(v.top)
+    expect(Math.abs(b.left - v.left)).toBeLessThanOrEqual(1)
+  })
+
   test('[REQ-RDR-040] tapping it turns the fold to the cover and saves the cover as the reading progress', async ({ page }) => {
     await gotoLastPage(page)
     await back(page).click()
