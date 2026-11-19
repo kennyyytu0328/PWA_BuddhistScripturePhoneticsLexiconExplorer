@@ -14,7 +14,8 @@ async function fetchRecording(): Promise<Blob> {
 }
 
 /**
- * The recording and its timings, loaded the first time `enabled` is true (the reader picks 聲) and kept after.
+ * The recording and its timings, loaded when `enabled` turns true (the reader picks 聲 or opens a name-term drawer)
+ * and kept once loaded. A failed load is tried again the next time `enabled` turns true after being false.
  * Null until loaded, or when loading fails (REQ-RDR-039: playing in 聲 then does nothing).
  */
 export function useVoice(enabled: boolean): Voice | null {
@@ -32,7 +33,7 @@ export function useVoice(enabled: boolean): Voice | null {
         setVoice({ player: createVoicePlayer(audio), timings })
       })
       .catch((error: unknown) => {
-        requested.current = false // try again the next time 聲 is picked
+        requested.current = false // try again the next time `enabled` goes false then true (聲 picked again, or the next drawer opening)
         console.warn('Voice recording could not be loaded:', error)
       })
   }, [enabled])

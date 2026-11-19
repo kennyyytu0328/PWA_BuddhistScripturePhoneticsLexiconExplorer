@@ -31,7 +31,7 @@ export function Reader({ data }: Props) {
   const { pace, cycle: cyclePace } = useFollowPace()
   const segments = data.ast.segments
   const timeline = useMemo(() => buildTimeline(segments), [segments])
-  const voice = useVoice(pace === 'voice' || lexicon.selection !== null)
+  const voice = useVoice(pace === 'voice' || lexicon.open)
   // Switching into or out of 聲 while playing pauses inside useFollowAlong (REQ-RDR-039).
   const { cursor, playing, play, pause, end } = useFollowAlong(timeline, pace ?? DEFAULT_PACE, voice)
   const [visible, setVisible] = useState<string | null>(null)
