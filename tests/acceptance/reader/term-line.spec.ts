@@ -178,7 +178,7 @@ test.describe('REQ-RDR-041 名相線', () => {
     }
   })
 
-  test('[REQ-RDR-041] the line stays while a term is highlighted (data-active) and while the follow-along runs', async ({ page }) => {
+  test('[REQ-RDR-041] the line stays while a term is highlighted (data-active)', async ({ page }) => {
     await gotoReader(page)
     await openLexicon(page, '觀自在')
     await expect(page.locator('[data-active="true"]')).toHaveCount(1)
@@ -218,7 +218,7 @@ test.describe('REQ-RDR-041 名相線', () => {
       const withLine = await boxes()
       const handle = await page.addStyleTag({ content: '.cell::before { content: none !important; }' })
       const without = await boxes()
-      await handle.evaluate((el) => el.remove())
+      await handle.evaluate((el) => (el as unknown as Element).remove())
       expect(without.length).toBe(withLine.length)
       expect(without).toEqual(withLine)
     }

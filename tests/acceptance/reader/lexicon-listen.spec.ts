@@ -30,17 +30,14 @@ interface VoiceHook {
   plays: number[]
   playing: boolean
   rejectPlay: boolean
-  timeupdateListeners: number
   fireError(): void
 }
 const hookTime = (page: Page): Promise<number> =>
   page.evaluate(() => (window as unknown as { __voice: VoiceHook }).__voice.time())
 const hookPlaying = (page: Page): Promise<boolean> =>
   page.evaluate(() => (window as unknown as { __voice: VoiceHook }).__voice.playing)
-const hookPlays = (page: Page): Promise<number[]> =>
-  page.evaluate(() => [...(window as unknown as { __voice: VoiceHook }).__voice.plays])
 
-/** Fake media clock (same approach as voice.spec.ts), plus fireError() and a timeupdate-listener counter. */
+/** Fake media clock (same approach as voice.spec.ts), plus fireError(). */
 async function installFakeAudio(page: Page): Promise<void> {
   const { duration } = timings()
   await page.addInitScript((dur: number) => {
@@ -64,7 +61,6 @@ async function installFakeAudio(page: Page): Promise<void> {
       plays: [] as number[],
       playing: false,
       rejectPlay: false,
-      timeupdateListeners: 0,
       time: () => (last ? posOf(last) : 0),
       fireError: () => {
         if (!last) return
@@ -77,19 +73,6 @@ async function installFakeAudio(page: Page): Promise<void> {
       },
     }
     ;(window as unknown as { __voice: typeof hook }).__voice = hook
-
-    const origAdd = EventTarget.prototype.addEventListener
-    EventTarget.prototype.addEventListener = function (this: EventTarget, type: string, ...rest: unknown[]) {
-      if (type === 'timeupdate' && this instanceof HTMLMediaElement) hook.timeupdateListeners++
-      return (origAdd as (...a: unknown[]) => void).call(this, type, ...rest)
-    } as typeof origAdd
-    Object.defineProperty(proto, 'ontimeupdate', {
-      configurable: true,
-      get: () => null,
-      set: (v: unknown) => {
-        if (v) hook.timeupdateListeners++
-      },
-    })
 
     const schedule = (el: HTMLMediaElement): void => {
       const s = st(el)
@@ -241,11 +224,8 @@ async function expectPlayingUi(page: Page): Promise<void> {
   await expect(listenIn(page)).toHaveAttribute('aria-pressed', 'true')
 }
 
-/** Last play() position, i.e. where the clip started. */
-const lastStart = async (page: Page): Promise<number> => {
-  const plays = await hookPlays(page)
-  return plays[plays.length - 1]
-}
+/** Where the clip started: the media position right after starting, read while the clock is frozen (call order of seek / play does not matter). */
+const lastStart = (page: Page): Promise<number> => hookTime(page)
 
 // ===========================================================================
 test.describe('REQ-RDR-043 聽讀音: the button', () => {
@@ -334,7 +314,7 @@ test.describe('REQ-RDR-043 聽讀音: playing the clip', () => {
       const end = o.i + o.n >= 260 ? tm.duration : tm.chars[o.i + o.n]
       await boot(page)
       await openTerm(page, o)
-      expect((await hookPlays(page)).length).toBe(0)
+      expect(await hookPlaying(page)).toBe(false)
       await startListen(page)
       await expectPlayingUi(page)
       expect(Math.abs((await lastStart(page)) - tm.chars[o.i])).toBeLessThanOrEqual(TOL)
@@ -390,7 +370,7 @@ test.describe('REQ-RDR-043 聽讀音: playing the clip', () => {
     expect(await hookPlaying(page)).toBe(true)
   })
 
-  test('[REQ-RDR-043] the clip end is found without a requestAnimationFrame loop and without timeupdate', async ({ page }) => {
+  test('[REQ-RDR-043] the clip end is found without a requestAnimationFrame loop (and the fake media never dispatches timeupdate, so it is not found through it)', async ({ page }) => {
     const o = occ('阿耨多羅三藐三菩提')
     await boot(page)
     await openTerm(page, o)
@@ -411,7 +391,10 @@ test.describe('REQ-RDR-043 聽讀音: playing the clip', () => {
     expect(await hookPlaying(page)).toBe(true)
     const frames = await page.evaluate(() => (window as unknown as { __raf: number }).__raf)
     expect(frames, 'a per-frame loop would call requestAnimationFrame ~120 times in 2s').toBeLessThan(30)
-    expect(await page.evaluate(() => (window as unknown as { __voice: VoiceHook }).__voice.timeupdateListeners)).toBe(0)
+    // the fake element never fires timeupdate: the clip still ends on time
+    await page.clock.runFor(4000)
+    expect(await hookPlaying(page)).toBe(false)
+    await expectIdle(page)
   })
 })
 
@@ -473,11 +456,16 @@ test.describe('REQ-RDR-043 聽讀音: stopping and isolation', () => {
     await toggle.click() // pause with a cursor
     await expect(toggle).toHaveText('誦')
 
-    const snapshot = () =>
-      page.evaluate(() => ({
+    const snapshot = async () => {
+      // the bar has a CSS transition that runs on real time: wait for it before measuring
+      await expect
+        .poll(() => page.evaluate(() => document.querySelector('[data-testid="follow-progress"]')?.getAnimations().length ?? 0))
+        .toBe(0)
+      return page.evaluate(() => ({
         follow: [...document.querySelectorAll('.cell, [data-testid="punct"]')].map((c) => c.getAttribute('data-follow')),
-        progress: document.querySelector('[data-testid="follow-progress"]')?.getBoundingClientRect().width ?? null,
+        progress: Math.round((document.querySelector('[data-testid="follow-progress"]')?.getBoundingClientRect().width ?? -1) * 2) / 2,
       }))
+    }
     const before = await snapshot()
     const cur = before.follow.indexOf('current')
     expect(cur).toBeGreaterThanOrEqual(0)
@@ -545,6 +533,47 @@ test.describe('REQ-RDR-043 聽讀音: recording unavailable', () => {
     await expect(page.locator('[role="alert"]')).toHaveCount(0)
     expect(errors).toEqual([])
   })
+
+  for (const mode of ['gate', 'abort'] as const) {
+    test(`[REQ-RDR-043] recording (voice.mp3) ${mode === 'gate' ? 'not loaded yet' : 'failed to load'}: 聽 does not play, stays 聽, no error UI, no exception`, async ({ page }) => {
+      const errors = collectPageErrors(page)
+      // real media element here (the fake one never touches the network); watch play() and element state
+      await page.addInitScript(() => {
+        const w = window as unknown as { __els: HTMLMediaElement[] }
+        w.__els = []
+        const orig = HTMLMediaElement.prototype.play
+        HTMLMediaElement.prototype.play = function (this: HTMLMediaElement) {
+          w.__els.push(this)
+          return orig.call(this)
+        }
+      })
+      let release: () => void = () => undefined
+      const gate = new Promise<void>((r) => {
+        release = r
+      })
+      await page.route('**/data/voice.mp3', async (route) => {
+        if (mode === 'abort') return route.abort()
+        await gate
+        return route.abort()
+      })
+      try {
+        await gotoReader(page)
+        await openLexicon(page, '觀自在')
+        await expect(listenIn(page)).toHaveCount(1)
+        await listenIn(page).click()
+        await page.waitForTimeout(600)
+        await expectIdle(page)
+        const playing = await page.evaluate(() =>
+          (window as unknown as { __els: HTMLMediaElement[] }).__els.filter((e) => !e.paused && e.currentTime > 0).length,
+        )
+        expect(playing).toBe(0)
+        await expect(page.locator('[role="alert"]')).toHaveCount(0)
+        expect(errors).toEqual([])
+      } finally {
+        release()
+      }
+    })
+  }
 
   test('[REQ-RDR-043] play() rejected: behaves like stop, button stays 聽, no error UI, no exception', async ({ page }) => {
     const errors = collectPageErrors(page)

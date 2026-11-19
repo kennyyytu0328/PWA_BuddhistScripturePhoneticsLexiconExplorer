@@ -359,9 +359,10 @@ test.describe('REQ-RDR-042 長按結束隨誦', () => {
     })
     const before = await vibrateCount(page)
     await page.clock.runFor(900)
+    await expect(toggleBtn(page)).toHaveText('停')
     expect(await page.locator('[data-follow]').count()).toBeGreaterThan(0)
     expect(await vibrateCount(page)).toBe(before)
-    await release(page)
+    await release(page) // the release is an ordinary click (pauses); only the state while held is asserted above
     await page.clock.runFor(200)
     expect(await page.locator('[data-follow]').count()).toBeGreaterThan(0)
   })
@@ -400,6 +401,7 @@ test.describe('REQ-RDR-042 長按結束隨誦', () => {
     await startFollow(page)
     await page.clock.runFor(60_000)
     await expectEnded(page)
+    expect(await toggleBtn(page).getAttribute('aria-describedby')).toBeNull() // natural finish too
     const before = await vibrateCount(page)
     await pressAndHold(page, 800)
     await release(page)
@@ -410,7 +412,7 @@ test.describe('REQ-RDR-042 長按結束隨誦', () => {
 
   test('[REQ-RDR-042] aria-describedby points to 長按結束隨誦 only while following (playing or paused); aria-label is unchanged', async ({ page }) => {
     await boot(page, { pace: '中' })
-    await expect(toggleBtn(page)).not.toHaveAttribute('aria-describedby', /.+/)
+    expect(await toggleBtn(page).getAttribute('aria-describedby')).toBeNull()
     await expect(toggleBtn(page)).toHaveAttribute('aria-label', '開始隨誦')
     await startFollow(page)
     expect(await describedText(page)).toBe('長按結束隨誦')
