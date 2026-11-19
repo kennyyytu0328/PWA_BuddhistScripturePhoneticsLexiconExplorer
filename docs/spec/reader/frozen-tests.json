@@ -23,7 +23,10 @@
     "tests/acceptance/reader/zhuyin-tone.spec.ts": "1e24625d6e3e9fa9544bdb6322ad5198009d0fa43ecd41821a115d3872b04cb6",
     "tests/acceptance/reader/follow-along.spec.ts": "703b27a53cc56c2dffea12c2f063056198aed07db7b073c2026b8e4c6c55a767",
     "tests/acceptance/reader/voice.spec.ts": "237519dbf6e2f559cd178ba0cf34a57f693c7c56bb4221d842e506cdc38da1f7",
-    "tests/acceptance/reader/back-to-cover.spec.ts": "8aa096dfa350755093f4affeacef34c34332481d16662d9d26b9fa0f4876d762"
+    "tests/acceptance/reader/back-to-cover.spec.ts": "8aa096dfa350755093f4affeacef34c34332481d16662d9d26b9fa0f4876d762",
+    "tests/acceptance/reader/term-line.spec.ts": "9187d670ba71c08fa90bd4a1e5132aae4736c706f7572ec50aa99ea9d477a01c",
+    "tests/acceptance/reader/follow-end.spec.ts": "e2ef53c3bea0bf532611c4698160f8f8f1db9108b51bf1c4140048b7dc182309",
+    "tests/acceptance/reader/lexicon-listen.spec.ts": "fe55c11776715fd2940720fa5665c9144ede3e459562b6daf6dc70924f626253"
   },
-  "frozenAt": "2026-11-19T07:00:00.000Z"
+  "frozenAt": "2026-11-19T07:55:55.770Z"
 }
