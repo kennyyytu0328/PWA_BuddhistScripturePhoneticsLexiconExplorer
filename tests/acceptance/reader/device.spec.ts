@@ -67,6 +67,6 @@ test.describe('device APIs', () => {
     await gotoReader(page)
     expect(await page.locator('[role="switch"], input[type="checkbox"], input[type="radio"]').count()).toBe(0)
     const testIds = await page.locator('button').evaluateAll((els) => [...new Set(els.map((e) => (e as HTMLElement).dataset.testid ?? '(none)'))].sort())
-    expect(testIds).toEqual(['follow-pace', 'follow-toggle', 'lex-token', 'phonetic-toggle', 'vernacular-toggle'])
+    expect(testIds).toEqual(['back-to-cover', 'follow-pace', 'follow-toggle', 'lex-token', 'phonetic-toggle', 'vernacular-toggle'])
   })
 })

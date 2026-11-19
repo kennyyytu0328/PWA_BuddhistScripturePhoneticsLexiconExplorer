@@ -1,4 +1,5 @@
 import { memo } from 'react'
+import { BACK_TO_COVER } from '../lib/cover'
 import { isPunct } from '../lib/types'
 import type { PhoneticMode, Segment, Token as TokenData } from '../lib/types'
 import { Token } from './Token'
@@ -12,6 +13,8 @@ interface Props {
   followAt: number | null
   /** Opens this page's 白話參考 panel; the button is rendered only when given. Keep it referentially stable. */
   onOpenVernacular?: (segmentId: string) => void
+  /** Given on the last page only: renders 回到經首 after the final column. Keep it referentially stable. */
+  onBackToCover?: () => void
 }
 
 interface Indexed {
@@ -37,7 +40,7 @@ function groupWithPunctuation(tokens: TokenData[]): Indexed[][] {
   }, [])
 }
 
-export const SutraPage = memo(function SutraPage({ segment, mode, activeKey, onSelect, followAt, onOpenVernacular }: Props) {
+export const SutraPage = memo(function SutraPage({ segment, mode, activeKey, onSelect, followAt, onOpenVernacular, onBackToCover }: Props) {
   return (
     <section className="sutra-page" data-testid="sutra-page" data-segment={segment.id}>
       <div className="sutra-text">
@@ -60,6 +63,13 @@ export const SutraPage = memo(function SutraPage({ segment, mode, activeKey, onS
           </span>
         ))}
       </div>
+      {onBackToCover && (
+        <div className="sutra-end">
+          <button type="button" className="back-to-cover" data-testid="back-to-cover" onClick={onBackToCover}>
+            {BACK_TO_COVER}
+          </button>
+        </div>
+      )}
       {onOpenVernacular && (
         <button
           type="button"

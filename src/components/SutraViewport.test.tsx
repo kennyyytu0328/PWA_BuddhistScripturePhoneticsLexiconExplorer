@@ -443,3 +443,41 @@ describe('SutraViewport', () => {
     })
   })
 })
+
+describe('SutraViewport back to the cover', () => {
+  const props = { title: ast.title, segments: ast.segments, mode: 'none' as const, activeKey: null, onSelect: () => {} }
+  const rect = (right: number) => ({ left: right - 400, right }) as DOMRect
+
+  beforeEach(() => vi.mocked(turnToPage).mockClear())
+
+  it('shows a 回到經首 button on the last page only', () => {
+    render(<SutraViewport {...props} />)
+    const pages = screen.getAllByTestId('sutra-page')
+    expect(pages[0].querySelector('[data-testid="back-to-cover"]')).toBeNull()
+    const button = pages[1].querySelector<HTMLButtonElement>('button[data-testid="back-to-cover"]')
+    expect(button?.textContent).toBe('回到經首')
+    expect(screen.getAllByTestId('back-to-cover')).toHaveLength(1)
+    expect(screen.getByTestId('sutra-cover').querySelector('[data-testid="back-to-cover"]')).toBeNull()
+  })
+
+  it('turns the fold to the cover and reports the landing as a user page change', () => {
+    const onPageChange = vi.fn()
+    render(<SutraViewport {...props} initialSegment="s2" onPageChange={onPageChange} followSegment="s2" />)
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      return rect(this.dataset.segment === 'cover' ? 400 : this.dataset.segment ? -400 : 400)
+    })
+    fireEvent.click(screen.getByTestId('back-to-cover'))
+    expect(turnToPage).toHaveBeenCalledOnce()
+    expect(vi.mocked(turnToPage).mock.calls[0][1]).toBe(screen.getByTestId('sutra-cover'))
+    expect(onPageChange).toHaveBeenCalledWith('cover', 'user')
+  })
+
+  it('cancels a running turn before turning back', () => {
+    const cancel = vi.fn()
+    vi.mocked(turnToPage).mockReturnValueOnce([{ cancel } as unknown as Animation])
+    const { rerender } = render(<SutraViewport {...props} followSegment="s1" />)
+    rerender(<SutraViewport {...props} followSegment="s2" />)
+    fireEvent.click(screen.getByTestId('back-to-cover'))
+    expect(cancel).toHaveBeenCalled()
+  })
+})

@@ -78,9 +78,9 @@ export function SutraViewport({
   const gesture = useRef({ down: false, moved: false })
 
   // Latest callbacks behind stable wrappers, so memoised pages are not re-rendered by a parent's new closures.
-  const latest = useRef({ onSelect, onOpenVernacular, segments })
+  const latest = useRef({ onSelect, onOpenVernacular, segments, settle: () => {} })
   useLayoutEffect(() => {
-    latest.current = { onSelect, onOpenVernacular, segments }
+    latest.current = { onSelect, onOpenVernacular, segments, settle }
   })
   const select = useCallback((key: string) => latest.current.onSelect(key), [])
   const openVernacular = useCallback((id: string) => {
@@ -101,6 +101,16 @@ export function SutraViewport({
     },
     [],
   )
+
+  // 回到經首 on the last page: the same turn as the follow-along, then settled at once (the scroll is instant).
+  // The landing is the reader's own move, so a playing follow-along pauses (REQ-RDR-035).
+  const backToCover = useCallback(() => {
+    const cover = pagesOf(ref.current!).find((page) => page.dataset.segment === COVER_PAGE)
+    if (!cover) return
+    turning.current.forEach((a) => a.cancel())
+    turning.current = turnToPage(ref.current!, cover)
+    latest.current.settle()
+  }, [])
 
   // A stored segment that no longer exists leaves the reader on the cover, so it counts as opening there.
   useCoverPeek(ref, !segments.some((segment) => segment.id === initialSegment))
@@ -182,7 +192,7 @@ export function SutraViewport({
       onScrollEnd={supportsScrollEnd() ? settle : undefined}
     >
       <SutraCover title={title} />
-      {segments.map((segment) => (
+      {segments.map((segment, i) => (
         <SutraPage
           key={segment.id}
           segment={segment}
@@ -191,6 +201,7 @@ export function SutraViewport({
           onSelect={select}
           followAt={follow ? localCursor(follow.timeline, segment.id, follow.cursor) : null}
           onOpenVernacular={openVernacular}
+          onBackToCover={i === segments.length - 1 ? backToCover : undefined}
         />
       ))}
     </main>

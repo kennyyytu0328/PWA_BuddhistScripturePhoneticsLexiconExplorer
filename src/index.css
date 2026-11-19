@@ -190,6 +190,27 @@ body {
   cursor: pointer;
 }
 
+/* 回到經首: the column after the last page's final column; a quiet outline capsule at its top, horizontal text. */
+.sutra-end {
+  padding-block-start: 1.5rem;
+}
+
+.back-to-cover {
+  writing-mode: horizontal-tb;
+  min-height: 44px;
+  padding: 0 1rem;
+  border: 1px solid var(--color-stone-400);
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--color-stone-200);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1;
+  cursor: pointer;
+}
+
 .vernacular-panel h2 {
   margin: 0;
   font-size: 1.5rem;
