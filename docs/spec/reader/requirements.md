@@ -1,5 +1,5 @@
 # 需求登錄表 — reader 單元
-> 狀態：已確認（2026-10-17，使用者確認；Q-RDR-001～015、017～032 採 A，016 採 B，皆已併入；REQ-RDR-029 於 2026-10-19 依 Q-RDR-018 新增；2026-10-20 實機試看後依 Q-RDR-036～038 修改 REQ-RDR-002、003、008、011，新增 REQ-RDR-030；2026-10-21 依 Q-RDR-042 新增 REQ-RDR-031；2026-11-17 依 Q-RDR-049 新增 REQ-RDR-032～037，修改 REQ-RDR-020、021；2026-11-18 依 Q-RDR-051 修改 REQ-RDR-032；同日依 Q-RDR-053 調快速度；同日依 Q-RDR-055 修改 REQ-RDR-032、035，新增 REQ-RDR-038、039；2026-11-19 依 Q-RDR-056 新增 REQ-RDR-040）。
+> 狀態：已確認（2026-10-17，使用者確認；Q-RDR-001～015、017～032 採 A，016 採 B，皆已併入；REQ-RDR-029 於 2026-10-19 依 Q-RDR-018 新增；2026-10-20 實機試看後依 Q-RDR-036～038 修改 REQ-RDR-002、003、008、011，新增 REQ-RDR-030；2026-10-21 依 Q-RDR-042 新增 REQ-RDR-031；2026-11-17 依 Q-RDR-049 新增 REQ-RDR-032～037，修改 REQ-RDR-020、021；2026-11-18 依 Q-RDR-051 修改 REQ-RDR-032；同日依 Q-RDR-053 調快速度；同日依 Q-RDR-055 修改 REQ-RDR-032、035，新增 REQ-RDR-038、039；2026-11-19 依 Q-RDR-056 新增 REQ-RDR-040；同日依 Q-RDR-057 新增 REQ-RDR-041～043）。
 > 來源：`CLAUDE.md`（行號依 2026-10-17 版本，commit 2279ebe）；依賴單元 `data`：產物格式見 `docs/spec/data/requirements.md` 的 REQ-DAT-002（AST）、003（辭典）、004（授權）、011／012（釋義與造字）、016（IAST）、019（無 lex 不可點擊）。
 > 範圍：§1 核心體驗、§4-2（UI 部分）、§6、§7、§8.2、8.4、8.5、8.6。PWA 安裝與離線（§5、§8.3）屬後續 `pwa` 單元。
 
@@ -527,4 +527,70 @@
   - Then 隨誦暫停並保留光標與 `data-follow`；錄音不再發聲
   - When 再按「誦」
   - Then 以新速度依 REQ-RDR-035 的續誦規則開始
+- 狀態：確認
+
+## 名相線、結束隨誦、聽讀音（2026-11-19）
+
+### REQ-RDR-041 名相線
+- 來源：Q-RDR-057（2026-11-19 新增）；設計 `docs/superpowers/specs/2026-11-19-term-line-end-listen-design.md`
+- 類型：UI
+- 驗收：
+  - Given 閱讀畫面，注音、拼音、梵文、無音標任一模式
+  - Then 每個 `button[data-testid="lex-token"]` 內的每個字格 `.cell`，其 `::before` 為一條直線：`content` 不為 `none`、`position: absolute`、寬 1px、背景 `rgb(168 162 158 / 0.6)`（stone-400 60% 不透明），沒有 transition 與 animation
+  - And 線位於字的左側，與 REQ-RDR-033 的琥珀線（`current` 字格的 `::after`）同位置：`right`、`margin-right`、`width` 的 computed 值相同；不與任何 `<rt>` 重疊
+  - And 線長：名相第一個字格的線自字格上緣內縮 3px 起（`top: 3px`），最後一個字格的線止於字格下緣內縮 3px（`bottom: 3px`），其餘端點為 0；單字名相兩端皆內縮
+  - And 不在名相內的字格（`[data-testid="token"]` 內的 `.cell`）與標點沒有此線（`::before` 的 `content` 為 `none`）
+  - And 名相高亮（`data-active="true"`）與隨誦進行中（任一 `data-follow`）時線照常存在
+  - And 線不佔版面：各音標模式下所有 `.cell` 與 `lex-token` 的 bounding box 與切換模式前後一致（CLS = 0，REQ-RDR-027）；觸控熱區仍符合 REQ-RDR-005
+- 狀態：確認
+
+### REQ-RDR-042 長按結束隨誦
+- 來源：Q-RDR-057（2026-11-19 新增）
+- 類型：行為
+- 驗收：
+  - Given 隨誦進行中：播放中或暫停中（有 `data-follow`），或「聲」模式的經題階段（REQ-RDR-038）
+  - When 在 `follow-toggle` 上按住（pointer down 不放）滿 600ms
+  - Then 隨誦結束，結果同 REQ-RDR-037：`follow-toggle` 文字「誦」、`aria-pressed="false"`；所有 `data-follow` 與 `follow-progress` 移除；畫面停在當前頁，不翻頁；「聲」模式的錄音暫停
+  - And 結束當下呼叫一次 `navigator.vibrate(12)`（不支援則略過，無例外）
+  - And 之後放開不視為點擊：隨誦不重新開始（放開後仍為「誦」、沒有 `data-follow`）
+  - When 之後短按「誦」
+  - Then 依 REQ-RDR-035 沒有光標時的規則：從所見頁第一字開始（封面依原規則）
+  - When 按住不足 600ms 即放開
+  - Then 同一般點擊（REQ-RDR-035）：播放中 → 暫停；暫停中 → 續誦；不結束
+  - When 按住期間指標移出按鈕（`pointerleave`）或被取消（`pointercancel`）
+  - Then 不結束，隨誦狀態不變
+  - Given 隨誦未開始或已結束
+  - When 在 `follow-toggle` 按住 600ms 以上再放開
+  - Then 同一般點擊：開始隨誦；不震動
+  - Given 隨誦進行中
+  - Then `follow-toggle` 有 `aria-describedby`，所指元素的文字為「長按結束隨誦」；`aria-label` 仍依 REQ-RDR-032
+  - Given 隨誦未開始或已結束
+  - Then `follow-toggle` 沒有 `aria-describedby`
+- 狀態：確認
+
+### REQ-RDR-043 聽讀音
+- 來源：Q-RDR-057（2026-11-19 新增）
+- 類型：UI／行為
+- 驗收：
+  - Given 點擊名相開啟抽屜（所點 token 的條目）
+  - Then `[data-testid="lexicon-readings"]` 內有唯一的 `button[data-testid="lexicon-listen"]`：文字「聽」、`aria-label="播放讀音"`、`aria-pressed="false"`
+  - And 按鈕 44×44px、`border-radius` 為 full（≥ 22px）、邊框 1px stone-400（`#a8a29e`）、背景透明、文字 stone-200（`#e7e5e4`）、Noto Sans TC、字重 300–400；完整位於抽屜內，不與讀音文字（注音、拼音、IAST）重疊
+  - When 點擊轉引連結（REQ-RDR-016）
+  - Then 轉引條目沒有 `lexicon-listen`；按「返回」後再出現
+  - Given 錄音 `data/voice.mp3` 與時間碼 `data/voice-timings.json` 已載入（速度為「聲」時，或第一次開啟名相抽屜時開始載入）；所點 token 的第一字是全經第 i 字（不計標點，自 0 起），該 token 共 n 字
+  - When 點擊「聽」
+  - Then 錄音自 `chars[i]` 秒播放；按鈕文字「停」、`aria-label="停止播放"`、`aria-pressed="true"`
+  - And 錄音位置到達終點時暫停，按鈕回到「聽」：終點為 `chars[i + n]`；i + n = 260（名相止於全經最後一字）時為錄音結束。暫停時錄音位置不早於終點，晚於終點不超過 0.1 秒
+  - And 同一詞條在經文多處出現時，播放所點那一處（各處的 i 不同，起點即不同）
+  - When 播放中再點擊按鈕
+  - Then 錄音暫停，按鈕回到「聽」；再點擊則自 `chars[i]` 重新播放
+  - When 播放中收起抽屜、點擊轉引連結，或 `document.visibilityState` 變為 `hidden`
+  - Then 錄音暫停；再開啟同一名相時按鈕為「聽」
+  - And 播放片段不改變隨誦狀態：光標位置、`data-follow`、`follow-progress` 與播放前相同；之後在「聲」模式按「誦」仍依 REQ-RDR-038 自 `chars[光標]` 續誦
+  - Given 錄音或時間碼尚未載入完成或載入失敗
+  - When 點擊「聽」
+  - Then 不播放，按鈕仍為「聽」，不顯示錯誤訊息，無例外
+  - Given 播放中錄音無法繼續（`play()` 被拒、`error` 事件）
+  - Then 同停止：按鈕回到「聽」，不顯示錯誤訊息
+  - And 片段終點的判定不使用 `requestAnimationFrame` 連續迴圈，也不依 `timeupdate` 事件
 - 狀態：確認
