@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useFollowAlong } from '../hooks/useFollowAlong'
+import { useHaptics } from '../hooks/useHaptics'
 import { useFollowPace } from '../hooks/useFollowPace'
 import { useVoice } from '../hooks/useVoice'
 import { COVER_PAGE } from '../lib/cover'
@@ -30,10 +31,16 @@ export function Reader({ data }: Props) {
   const timeline = useMemo(() => buildTimeline(segments), [segments])
   const voice = useVoice(pace === 'voice')
   // Switching into or out of 聲 while playing pauses inside useFollowAlong (REQ-RDR-039).
-  const { cursor, playing, play, pause } = useFollowAlong(timeline, pace ?? DEFAULT_PACE, voice)
+  const { cursor, playing, play, pause, end } = useFollowAlong(timeline, pace ?? DEFAULT_PACE, voice)
   const [visible, setVisible] = useState<string | null>(null)
   // The segment stays set after closing so the panel content survives the slide-out animation.
   const [vernacular, setVernacular] = useState<{ segment: Segment; open: boolean } | null>(null)
+
+  const vibrate = useHaptics()
+  const endFollow = useCallback(() => {
+    vibrate()
+    end()
+  }, [vibrate, end])
 
   const cursorSegment = cursor !== null ? timeline.steps[cursor].segmentId : null
   const follow = useMemo(() => (cursor !== null ? { timeline, cursor } : null), [timeline, cursor])
@@ -85,7 +92,9 @@ export function Reader({ data }: Props) {
       <PhoneticToggle mode={mode} onCycle={cycle} />
       <FollowControls
         playing={playing}
+        active={cursor !== null || playing}
         pace={pace}
+        onEnd={endFollow}
         onToggle={() => (playing ? pause() : play(current))}
         onCyclePace={cyclePace}
       />

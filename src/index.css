@@ -591,6 +591,9 @@ rt {
   font-family: var(--font-sans);
   font-weight: 400;
   cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* The pace key sits 8px to the left of the toggle (1rem + 44px + 0.5rem from the edge). */

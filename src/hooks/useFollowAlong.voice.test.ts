@@ -170,6 +170,28 @@ describe('useFollowAlong in voice mode', () => {
     expect(result.current.cursor).toBe(cursor)
   })
 
+  it('end in voice mode pauses the player', async () => {
+    const { result, fake, play, advance } = setup()
+    await play('s1')
+    await advance(1000)
+    expect(fake.isPlaying()).toBe(true)
+    act(() => result.current.end())
+    expect(fake.isPlaying()).toBe(false)
+    expect(result.current).toMatchObject({ cursor: null, playing: false })
+    await advance(5000)
+    expect(result.current.cursor).toBeNull()
+  })
+
+  it('end during the title pauses the player', async () => {
+    const { result, fake, play, advance } = setup()
+    await play(COVER_PAGE)
+    await advance(500)
+    expect(fake.isPlaying()).toBe(true)
+    act(() => result.current.end())
+    expect(fake.isPlaying()).toBe(false)
+    expect(result.current).toMatchObject({ cursor: null, playing: false })
+  })
+
   it('unmounting stops the recording and leaves no timer', async () => {
     const { fake, play, unmount } = setup()
     await play('s1')

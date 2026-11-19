@@ -63,6 +63,8 @@ export function useFollowAlong(timeline: Timeline, mode: FollowMode, voice: Voic
     return () => clearTimeout(timer)
   }, [playing, timeline, isVoice])
 
+  const end = useCallback(() => setState((current) => (current === IDLE ? current : IDLE)), [])
+
   const pause = useCallback(() => setState((current) => (current.playing ? { ...current, playing: false } : current)), [])
 
   useEffect(() => {
@@ -98,5 +100,5 @@ export function useFollowAlong(timeline: Timeline, mode: FollowMode, voice: Voic
     return () => document.removeEventListener('visibilitychange', onVisibility)
   }, [playing, pause])
 
-  return { cursor, playing, play, pause }
+  return { cursor, playing, play, pause, end }
 }

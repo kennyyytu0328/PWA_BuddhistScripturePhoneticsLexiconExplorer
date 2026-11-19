@@ -186,6 +186,34 @@ describe('useFollowAlong', () => {
     expect(result.current.cursor).toBe(0)
   })
 
+  it('end while playing clears the cursor and stops the beats', () => {
+    const { result } = setup()
+    act(() => result.current.play(COVER_PAGE))
+    act(() => void vi.advanceTimersByTime(ms(225, 0)))
+    act(() => result.current.end())
+    expect(result.current).toMatchObject({ cursor: null, playing: false })
+    act(() => void vi.advanceTimersByTime(beatMs(225) * 20))
+    expect(result.current.cursor).toBeNull()
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('end while paused clears the cursor', () => {
+    const { result } = setup()
+    act(() => result.current.play(COVER_PAGE))
+    act(() => result.current.pause())
+    expect(result.current.cursor).toBe(0)
+    act(() => result.current.end())
+    expect(result.current).toMatchObject({ cursor: null, playing: false })
+  })
+
+  it('end when idle changes nothing', () => {
+    const { result } = setup()
+    const before = result.current
+    act(() => result.current.end())
+    expect(result.current).toMatchObject({ cursor: null, playing: false })
+    expect(result.current.play).toBe(before.play)
+  })
+
   it('leaves no timer behind after unmount', () => {
     const { result, unmount } = setup()
     act(() => result.current.play(COVER_PAGE))
