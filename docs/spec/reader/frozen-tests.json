@@ -23,7 +23,7 @@
     "tests/acceptance/reader/zhuyin-tone.spec.ts": "1e24625d6e3e9fa9544bdb6322ad5198009d0fa43ecd41821a115d3872b04cb6",
     "tests/acceptance/reader/follow-along.spec.ts": "703b27a53cc56c2dffea12c2f063056198aed07db7b073c2026b8e4c6c55a767",
     "tests/acceptance/reader/voice.spec.ts": "237519dbf6e2f559cd178ba0cf34a57f693c7c56bb4221d842e506cdc38da1f7",
-    "tests/acceptance/reader/back-to-cover.spec.ts": "c827df47040eb70e1dbe0542eda05887789b3df97ef53af2124e7ed9fe1c39b2"
+    "tests/acceptance/reader/back-to-cover.spec.ts": "8aa096dfa350755093f4affeacef34c34332481d16662d9d26b9fa0f4876d762"
   },
   "frozenAt": "2026-11-19T07:00:00.000Z"
 }
