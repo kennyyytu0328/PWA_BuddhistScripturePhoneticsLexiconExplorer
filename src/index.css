@@ -284,8 +284,9 @@ body {
    the box-shadow §6.5 rules out. Its <rt> keeps the plain reading colour. */
 .cell[data-follow='current'] {
   text-shadow:
-    0 0 6px rgb(245 158 11 / 0.55),
-    0 0 14px rgb(245 158 11 / 0.3);
+    0 0 4px rgb(245 158 11 / 0.8),
+    0 0 10px rgb(245 158 11 / 0.55),
+    0 0 20px rgb(245 158 11 / 0.35);
 }
 
 .cell[data-follow='current'] rt {
