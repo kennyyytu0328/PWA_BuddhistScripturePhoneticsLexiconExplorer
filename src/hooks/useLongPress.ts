@@ -15,7 +15,7 @@ type Handlers = Pick<
 
 /**
  * Press-and-hold on a button (REQ-RDR-042). While `enabled`, holding LONG_PRESS_MS calls `onLongPress` and the
- * click that follows the release is swallowed; leaving the button or a pointer cancel aborts the hold.
+ * pointer click that follows the release is swallowed (a keyboard click never is); only the primary button holds; leaving the button or a pointer cancel aborts the hold.
  * Not enabled: the hold is ignored and the release is an ordinary click. The hold is a timer, not event timestamps.
  */
 export function useLongPress({ enabled, onLongPress, onClick }: Options): Handlers {
@@ -36,23 +36,26 @@ export function useLongPress({ enabled, onLongPress, onClick }: Options): Handle
     if (!enabled) cancel()
   }, [enabled, cancel])
 
-  const onPointerDown = useCallback(() => {
-    cancel()
-    fired.current = false
-    if (!enabled) return
-    timer.current = setTimeout(() => {
-      timer.current = undefined
-      fired.current = true
-      latest.current.onLongPress()
-    }, LONG_PRESS_MS)
-  }, [enabled, cancel])
-
-  const handleClick = useCallback(() => {
-    if (fired.current) {
+  const onPointerDown = useCallback<NonNullable<Handlers['onPointerDown']>>(
+    (event) => {
+      if (event.button !== 0) return // right and middle mouse buttons never start a hold; touch and pen report 0
+      cancel()
       fired.current = false
-      return
-    }
-    latest.current.onClick()
+      if (!enabled) return
+      timer.current = setTimeout(() => {
+        timer.current = undefined
+        fired.current = true
+        latest.current.onLongPress()
+      }, LONG_PRESS_MS)
+    },
+    [enabled, cancel],
+  )
+
+  // A click without a pointer (detail 0: Enter/Space) is never swallowed; `fired` may be stale if the release landed elsewhere.
+  const handleClick = useCallback<NonNullable<Handlers['onClick']>>((event) => {
+    const swallow = fired.current && event.detail > 0
+    fired.current = false
+    if (!swallow) latest.current.onClick()
   }, [])
 
   return {

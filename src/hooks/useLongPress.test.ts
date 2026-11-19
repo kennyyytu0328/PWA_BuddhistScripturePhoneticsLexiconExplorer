@@ -53,7 +53,7 @@ describe('useLongPress', () => {
     const { button, hold, onLongPress, onClick } = setup()
     hold(LONG_PRESS_MS)
     fireEvent.pointerUp(button)
-    fireEvent.click(button)
+    fireEvent.click(button, { detail: 1 })
     expect(onLongPress).toHaveBeenCalledTimes(1)
     expect(onClick).not.toHaveBeenCalled()
     fireEvent.pointerDown(button)
@@ -75,7 +75,7 @@ describe('useLongPress', () => {
     hold(LONG_PRESS_MS)
     fireEvent.pointerUp(button)
     fireEvent.pointerLeave(button)
-    fireEvent.click(button)
+    fireEvent.click(button, { detail: 1 })
     expect(onClick).not.toHaveBeenCalled()
   })
 
@@ -97,6 +97,28 @@ describe('useLongPress', () => {
     fireEvent.click(button)
     expect(onLongPress).not.toHaveBeenCalled()
     expect(onClick).toHaveBeenCalledTimes(1)
+  })
+
+  it('only the primary button starts a hold', () => {
+    const { button, onLongPress } = setup()
+    fireEvent.pointerDown(button, { button: 2 })
+    fireEvent.pointerDown(button, { button: 1 })
+    act(() => void vi.advanceTimersByTime(LONG_PRESS_MS * 2))
+    expect(onLongPress).not.toHaveBeenCalled()
+    fireEvent.pointerDown(button, { button: 0 })
+    act(() => void vi.advanceTimersByTime(LONG_PRESS_MS))
+    expect(onLongPress).toHaveBeenCalledTimes(1)
+  })
+
+  it('a keyboard click is never swallowed, even after a long press released outside the button', () => {
+    const { button, hold, onLongPress, onClick } = setup()
+    hold(LONG_PRESS_MS)
+    fireEvent.pointerLeave(button)
+    expect(onLongPress).toHaveBeenCalledTimes(1)
+    fireEvent.click(button, { detail: 0 })
+    expect(onClick).toHaveBeenCalledTimes(1)
+    fireEvent.click(button, { detail: 1 })
+    expect(onClick).toHaveBeenCalledTimes(2)
   })
 
   it('suppresses the context menu a touch hold would open', () => {

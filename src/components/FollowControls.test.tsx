@@ -77,7 +77,7 @@ describe('FollowControls', () => {
       fireEvent.pointerDown(toggle)
       act(() => void vi.advanceTimersByTime(600))
       fireEvent.pointerUp(toggle)
-      fireEvent.click(toggle)
+      fireEvent.click(toggle, { detail: 1 })
       expect(onEnd).toHaveBeenCalledTimes(1)
       expect(onToggle).not.toHaveBeenCalled()
     })
