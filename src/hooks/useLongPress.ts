@@ -31,6 +31,10 @@ export function useLongPress({ enabled, onLongPress, onClick }: Options): Handle
     timer.current = undefined
   }, [])
   useEffect(() => cancel, [cancel])
+  // The follow-along ended mid-hold (e.g. its last character): the hold no longer ends anything.
+  useEffect(() => {
+    if (!enabled) cancel()
+  }, [enabled, cancel])
 
   const onPointerDown = useCallback(() => {
     cancel()

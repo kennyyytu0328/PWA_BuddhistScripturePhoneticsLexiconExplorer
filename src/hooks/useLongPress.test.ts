@@ -10,19 +10,24 @@ afterEach(() => {
 })
 
 function setup(enabled = true) {
+  const props = { enabled }
   const onLongPress = vi.fn()
   const onClick = vi.fn()
   function Probe() {
-    const handlers = useLongPress({ enabled, onLongPress, onClick })
+    const handlers = useLongPress({ enabled: props.enabled, onLongPress, onClick })
     return createElement('button', { type: 'button', 'data-testid': 'b', ...handlers })
   }
-  render(createElement(Probe))
+  const { rerender } = render(createElement(Probe))
+  const setEnabled = (value: boolean) => {
+    props.enabled = value
+    rerender(createElement(Probe))
+  }
   const button = screen.getByTestId('b')
   const hold = (ms: number) => {
     fireEvent.pointerDown(button)
     act(() => void vi.advanceTimersByTime(ms))
   }
-  return { button, onLongPress, onClick, hold }
+  return { button, onLongPress, onClick, hold, setEnabled }
 }
 
 describe('useLongPress', () => {
@@ -72,6 +77,17 @@ describe('useLongPress', () => {
     fireEvent.pointerLeave(button)
     fireEvent.click(button)
     expect(onClick).not.toHaveBeenCalled()
+  })
+
+  it('becoming disabled mid-hold drops the hold: no long press, the release is a click', () => {
+    const { button, hold, setEnabled, onLongPress, onClick } = setup()
+    hold(300)
+    setEnabled(false)
+    act(() => void vi.advanceTimersByTime(1000))
+    fireEvent.pointerUp(button)
+    fireEvent.click(button)
+    expect(onLongPress).not.toHaveBeenCalled()
+    expect(onClick).toHaveBeenCalledTimes(1)
   })
 
   it('disabled: a long hold is still a click', () => {
